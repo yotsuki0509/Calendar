@@ -46,7 +46,8 @@
         <h1 class="text-base font-semibold tracking-tight leading-tight">部門共用行事曆</h1>
         <div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
           <span>部門空間:</span>
-          <span id="display-department" class="font-semibold text-slate-900 dark:text-white uppercase px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded">MIS</span>
+          <!-- HTML 預設清空，由 JS 初始化帶入 -->
+          <span id="display-department" class="font-semibold text-slate-900 dark:text-white uppercase px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded"></span>
         </div>
       </div>
     </div>
@@ -314,7 +315,8 @@
     window.state = {
       isDark: false,
       user: null,
-      department: 'mis',
+      // 讀取瀏覽器記憶，若無則預設為 'public'
+      department: localStorage.getItem('calendar_saved_dept') || 'public',
       currentDate: new Date(),
       events: [],
       categories: [],
@@ -436,6 +438,8 @@
       const val = document.getElementById('dept-input').value.trim();
       if (val) {
         window.state.department = val;
+        // 將切換成功的部門寫入瀏覽器記憶
+        localStorage.setItem('calendar_saved_dept', val);
         document.getElementById('display-department').textContent = val;
         setupFirebaseListeners();
       }
@@ -735,6 +739,9 @@
 
     // --- Initialization ---
     const initApp = async () => {
+      // 在畫面上先同步目前讀取到的部門代號 (從 localStorage 讀出來的，或是預設的 public)
+      document.getElementById('display-department').textContent = window.state.department;
+      
       // Init Selectors
       const yearSelect = document.getElementById('year-select');
       const monthSelect = document.getElementById('month-select');
