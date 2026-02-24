@@ -1,644 +1,762 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { 
-  ChevronLeft, ChevronRight, Calendar as CalendarIcon, 
-  Plus, User, AlignLeft, Settings, X, Trash2, Building, 
-  Sun, Moon, Edit2, ChevronDown
-} from 'lucide-react';
-import { initializeApp } from 'firebase/app';
-import { 
-  getAuth, signInAnonymously, onAuthStateChanged 
-} from 'firebase/auth';
-import { 
-  getFirestore, collection, onSnapshot, doc, deleteDoc, addDoc, updateDoc 
-} from 'firebase/firestore';
-
-// --- Firebase Initialization ---
-const firebaseConfig = {
-  apiKey: "AIzaSyAXnSDK_kY4Aa8XvL0M_Md9kA4Wdow_Uvs",
-  authDomain: "daily-23c82.firebaseapp.com",
-  projectId: "daily-23c82",
-  storageBucket: "daily-23c82.firebasestorage.app",
-  messagingSenderId: "574719251457",
-  appId: "1:574719251457:web:30aadb364406783b175c00",
-  measurementId: "G-6JN0N6BJHH"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const appId = 'daily-23c82-app';
-
-// --- Professional Theme Palette ---
-// 針對「全天(色塊)」與「特定時間(左邊框)」做獨立的高辨識度設計
-const THEME_COLORS = {
-  blue: { id: 'blue', label: '藍色 (休假/個人)', allDay: 'bg-blue-500 text-white', timeEvent: 'bg-blue-50 dark:bg-blue-500/10 border-l-[3px] border-blue-500 text-blue-700 dark:text-blue-300' },
-  green: { id: 'green', label: '綠色 (交辦事項)', allDay: 'bg-green-500 text-white', timeEvent: 'bg-green-50 dark:bg-green-500/10 border-l-[3px] border-green-500 text-green-700 dark:text-green-300' },
-  red: { id: 'red', label: '紅色 (緊急/重要)', allDay: 'bg-red-500 text-white', timeEvent: 'bg-red-50 dark:bg-red-500/10 border-l-[3px] border-red-500 text-red-700 dark:text-red-300' },
-  yellow: { id: 'yellow', label: '黃色 (會議/討論)', allDay: 'bg-yellow-500 text-white', timeEvent: 'bg-amber-50 dark:bg-yellow-500/10 border-l-[3px] border-yellow-500 text-amber-700 dark:text-yellow-300' },
-  purple: { id: 'purple', label: '紫色 (專案/活動)', allDay: 'bg-purple-500 text-white', timeEvent: 'bg-purple-50 dark:bg-purple-500/10 border-l-[3px] border-purple-500 text-purple-700 dark:text-purple-300' },
-  gray: { id: 'gray', label: '灰色 (其他/備忘)', allDay: 'bg-gray-500 text-white', timeEvent: 'bg-gray-100 dark:bg-gray-800 border-l-[3px] border-gray-500 text-gray-700 dark:text-gray-300' }
-};
-
-export default function App() {
-  const [isDark, setIsDark] = useState(false);
-  const [user, setUser] = useState(null);
-  const [departmentInput, setDepartmentInput] = useState('mis');
-  const [activeDepartment, setActiveDepartment] = useState('mis');
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>部門共用行事曆</title>
   
-  const [events, setEvents] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [holidays, setHolidays] = useState({});
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
   
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [showEventModal, setShowEventModal] = useState(false);
-  const [showCategoryModal, setShowCategoryModal] = useState(false);
-  const [showViewModal, setShowViewModal] = useState(false);
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [selectedEvent, setSelectedEvent] = useState(null);
-  
-  const defaultForm = { id: null, title: '', name: '', categoryId: '', description: '', isAllDay: true, startTime: '09:00', endTime: '18:00' };
-  const [formData, setFormData] = useState(defaultForm);
-  const [newCategoryThemeId, setNewCategoryThemeId] = useState('blue');
-  const [newCategoryName, setNewCategoryName] = useState('');
-
-  const datePickerRef = useRef(null);
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (datePickerRef.current && !datePickerRef.current.contains(event.target)) setShowDatePicker(false);
+  <!-- Tailwind Configuration for Dark Mode & Custom Colors -->
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {}
+      }
     }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  </script>
 
-  useEffect(() => {
-    const initAuth = async () => { try { await signInAnonymously(auth); } catch (error) { console.error(error); } };
-    initAuth();
-    const unsubscribe = onAuthStateChanged(auth, setUser);
-    return () => unsubscribe();
-  }, []);
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
 
-  useEffect(() => {
+  <!-- Custom Styles for Scrollbar -->
+  <style>
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; }
+    .custom-scrollbar:hover::-webkit-scrollbar-thumb { background: #94a3b8; }
+    .dark .custom-scrollbar:hover::-webkit-scrollbar-thumb { background: #475569; }
+    
+    /* Modal Backdrop Blur support */
+    .backdrop-blur-sm { backdrop-filter: blur(2px); }
+  </style>
+</head>
+<body class="bg-white dark:bg-[#09090b] text-slate-900 dark:text-slate-100 font-sans transition-colors duration-200 min-h-screen pb-20">
+
+  <!-- Header (Clean SaaS Toolbar) -->
+  <header class="border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#09090b] px-4 md:px-6 py-3 flex flex-col md:flex-row justify-between items-center gap-4 sticky top-0 z-10">
+    <div class="flex items-center gap-3">
+      <div class="p-1.5 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 rounded-md">
+        <i data-lucide="calendar" class="w-5 h-5"></i>
+      </div>
+      <div>
+        <h1 class="text-base font-semibold tracking-tight leading-tight">部門共用行事曆</h1>
+        <div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+          <span>部門空間:</span>
+          <span id="display-department" class="font-semibold text-slate-900 dark:text-white uppercase px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded">MIS</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2 w-full md:w-auto">
+      <form id="dept-form" class="flex flex-1 md:flex-none">
+        <div class="relative flex items-center w-full md:w-40">
+          <i data-lucide="building" class="absolute left-2.5 w-3.5 h-3.5 text-slate-400"></i>
+          <input type="text" id="dept-input" placeholder="部門代號" class="w-full pl-8 pr-3 py-1.5 text-sm border border-slate-200 dark:border-slate-800 rounded-l-md bg-transparent focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-600 uppercase">
+        </div>
+        <button type="submit" class="px-3 py-1.5 text-sm font-medium border border-l-0 border-slate-200 dark:border-slate-800 rounded-r-md bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 transition-colors">切換</button>
+      </form>
+      
+      <button onclick="openCategoryModal()" class="p-1.5 border border-slate-200 dark:border-slate-800 rounded-md text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors" title="管理分類">
+        <i data-lucide="settings" class="w-4 h-4"></i>
+      </button>
+      <button onclick="toggleDarkMode()" class="p-1.5 border border-slate-200 dark:border-slate-800 rounded-md text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors" title="深淺色切換">
+        <i id="theme-icon" data-lucide="moon" class="w-4 h-4"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Calendar Workspace -->
+  <main class="max-w-[1600px] mx-auto p-4 md:p-6">
+    
+    <!-- Calendar Controls -->
+    <div class="flex items-center justify-between mb-4">
+      <div class="relative">
+        <button onclick="toggleDatePicker()" class="flex items-center gap-1.5 text-xl font-bold hover:opacity-70 transition-opacity">
+          <span id="current-month-year">2026 年 1 月</span>
+          <i data-lucide="chevron-down" class="w-5 h-5 text-slate-400"></i>
+        </button>
+        
+        <div id="date-picker-dropdown" class="hidden absolute top-full mt-1 left-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-lg rounded-lg p-2 z-40 flex gap-2">
+          <select id="year-select" onchange="changeYearMonth()" class="p-1.5 text-sm border border-slate-200 dark:border-slate-700 rounded bg-transparent outline-none cursor-pointer"></select>
+          <select id="month-select" onchange="changeYearMonth()" class="p-1.5 text-sm border border-slate-200 dark:border-slate-700 rounded bg-transparent outline-none cursor-pointer"></select>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-1">
+        <button onclick="goToToday()" class="px-3 py-1.5 text-sm font-medium border border-slate-200 dark:border-slate-800 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors mr-2">今天</button>
+        <button onclick="prevMonth()" class="p-1.5 border border-slate-200 dark:border-slate-800 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+          <i data-lucide="chevron-left" class="w-4 h-4"></i>
+        </button>
+        <button onclick="nextMonth()" class="p-1.5 border border-slate-200 dark:border-slate-800 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+          <i data-lucide="chevron-right" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Calendar Grid Design -->
+    <div class="border-t border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-[#09090b]">
+      <!-- Days Header -->
+      <div class="grid grid-cols-7 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
+        <div class="py-2 text-center text-xs font-semibold border-r border-slate-200 dark:border-slate-800 uppercase tracking-wider text-red-500/80 dark:text-red-400/80">週日</div>
+        <div class="py-2 text-center text-xs font-semibold border-r border-slate-200 dark:border-slate-800 uppercase tracking-wider text-slate-500">週一</div>
+        <div class="py-2 text-center text-xs font-semibold border-r border-slate-200 dark:border-slate-800 uppercase tracking-wider text-slate-500">週二</div>
+        <div class="py-2 text-center text-xs font-semibold border-r border-slate-200 dark:border-slate-800 uppercase tracking-wider text-slate-500">週三</div>
+        <div class="py-2 text-center text-xs font-semibold border-r border-slate-200 dark:border-slate-800 uppercase tracking-wider text-slate-500">週四</div>
+        <div class="py-2 text-center text-xs font-semibold border-r border-slate-200 dark:border-slate-800 uppercase tracking-wider text-slate-500">週五</div>
+        <div class="py-2 text-center text-xs font-semibold border-r border-slate-200 dark:border-slate-800 uppercase tracking-wider text-red-500/80 dark:text-red-400/80">週六</div>
+      </div>
+
+      <!-- Calendar Cells Container -->
+      <div id="calendar-grid" class="grid grid-cols-7 auto-rows-fr">
+        <!-- Cells will be injected by JS -->
+      </div>
+    </div>
+  </main>
+
+  <div class="fixed bottom-3 right-4 pointer-events-none">
+    <p class="text-[10px] font-medium text-slate-400 dark:text-slate-600 tracking-widest uppercase">
+      Crafted by <span class="font-bold">勝全</span> ✕ AI
+    </p>
+  </div>
+
+  <!-- --- Modals --- -->
+  
+  <!-- Add/Edit Event Modal -->
+  <div id="event-modal" class="hidden fixed inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="bg-white dark:bg-[#0f0f11] border border-slate-200 dark:border-slate-800 rounded-xl w-full max-w-md shadow-xl overflow-hidden">
+      <div class="px-5 py-4 flex justify-between items-center border-b border-slate-100 dark:border-slate-800/50">
+        <h3 id="event-modal-title" class="text-base font-semibold flex items-center gap-2">
+          <i data-lucide="plus" class="w-4 h-4 text-slate-400"></i> 新增事項
+        </h3>
+        <button onclick="closeEventModal()" class="text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+      
+      <form id="event-form" class="p-5 space-y-4">
+        <input type="hidden" id="form-id">
+        <input type="hidden" id="form-date-str">
+        
+        <div class="flex gap-3">
+          <div class="flex-1 bg-slate-50 dark:bg-slate-900 px-3 py-2 rounded-md border border-slate-200 dark:border-slate-800">
+            <p class="text-[10px] text-slate-500 uppercase tracking-wide font-semibold mb-0.5">日期</p>
+            <p id="form-display-date" class="text-sm font-medium">YYYY/MM/DD</p>
+          </div>
+          <div class="flex-1 bg-slate-50 dark:bg-slate-900 px-3 py-2 rounded-md border border-slate-200 dark:border-slate-800 flex flex-col justify-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" onclick="toggleAllDay()">
+            <p class="text-[10px] text-slate-500 uppercase tracking-wide font-semibold mb-0.5">模式</p>
+            <div class="flex items-center gap-2">
+              <div id="allday-toggle-bg" class="w-7 h-4 rounded-full transition-colors relative bg-slate-900 dark:bg-slate-100">
+                <div id="allday-toggle-knob" class="absolute top-[2px] left-[2px] bg-white dark:bg-slate-900 w-3 h-3 rounded-full transition-transform translate-x-3"></div>
+              </div>
+              <span id="allday-text" class="text-sm font-medium">全天</span>
+            </div>
+            <input type="hidden" id="form-is-allday" value="true">
+          </div>
+        </div>
+
+        <div id="time-inputs" class="hidden flex gap-3 items-center">
+          <div class="flex-1">
+            <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">開始時間</label>
+            <input type="time" id="form-start-time" class="w-full px-3 py-1.5 bg-transparent border border-slate-300 dark:border-slate-700 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 dark:focus:ring-slate-400" value="09:00">
+          </div>
+          <span class="text-slate-400 mt-5">-</span>
+          <div class="flex-1">
+            <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">結束時間</label>
+            <input type="time" id="form-end-time" class="w-full px-3 py-1.5 bg-transparent border border-slate-300 dark:border-slate-700 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 dark:focus:ring-slate-400" value="18:00">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">事項標題 <span class="text-red-500">*</span></label>
+          <input required type="text" id="form-title" class="w-full px-3 py-2 bg-transparent border border-slate-300 dark:border-slate-700 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 dark:focus:ring-slate-400" placeholder="例如：伺服器維護">
+        </div>
+
+        <div class="flex gap-3">
+          <div class="flex-1">
+            <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">負責人姓名 <span class="text-red-500">*</span></label>
+            <input required type="text" id="form-name" class="w-full px-3 py-2 bg-transparent border border-slate-300 dark:border-slate-700 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 dark:focus:ring-slate-400" placeholder="姓名">
+          </div>
+          <div class="flex-1">
+            <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">分類標籤 <span class="text-red-500">*</span></label>
+            <select required id="form-category" class="w-full px-3 py-2 bg-transparent border border-slate-300 dark:border-slate-700 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 dark:focus:ring-slate-400">
+              <!-- Options injected by JS -->
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">詳細說明 (選填)</label>
+          <textarea rows="2" id="form-desc" class="w-full px-3 py-2 bg-transparent border border-slate-300 dark:border-slate-700 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 dark:focus:ring-slate-400 resize-none" placeholder="輸入備註細節..."></textarea>
+        </div>
+
+        <div class="pt-3 flex justify-end gap-2">
+          <button type="button" onclick="closeEventModal()" class="px-4 py-2 text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors">取消</button>
+          <button type="submit" id="form-submit-btn" class="px-4 py-2 text-sm bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 rounded-md font-medium transition-colors shadow-sm">建立事項</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- View Event Modal -->
+  <div id="view-modal" class="hidden fixed inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="bg-white dark:bg-[#0f0f11] border border-slate-200 dark:border-slate-800 rounded-xl w-full max-w-sm shadow-xl overflow-hidden">
+      <div class="px-5 py-3 flex justify-between items-center border-b border-slate-100 dark:border-slate-800/50">
+        <div id="view-badge" class="px-2 py-0.5 rounded text-[10px] font-bold tracking-wide">未分類</div>
+        <div class="flex gap-1">
+          <button onclick="startEditMode()" class="p-1 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors" title="編輯此紀錄"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
+          <button onclick="closeViewModal()" class="p-1 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"><i data-lucide="x" class="w-4 h-4"></i></button>
+        </div>
+      </div>
+      
+      <div class="p-5">
+        <h3 id="view-title" class="text-lg font-semibold mb-4 leading-tight">標題</h3>
+        
+        <div class="space-y-2 mb-6">
+          <div class="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400">
+            <i data-lucide="calendar" class="w-4 h-4 text-slate-400"></i>
+            <span id="view-date">YYYY/MM/DD</span>
+            <div id="view-time-container" class="hidden flex items-center gap-1.5 pl-3 border-l border-slate-300 dark:border-slate-700 ml-1">
+              <span id="view-time" class="font-medium text-slate-900 dark:text-slate-200">09:00 - 18:00</span>
+            </div>
+          </div>
+          <div class="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400">
+            <i data-lucide="user" class="w-4 h-4 text-slate-400"></i>
+            <span id="view-name" class="font-medium text-slate-900 dark:text-white">姓名</span>
+            <span id="view-type" class="text-[10px] px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-slate-500">全天</span>
+          </div>
+        </div>
+
+        <div id="view-desc-container" class="hidden text-sm text-slate-600 dark:text-slate-300 whitespace-pre-wrap leading-relaxed bg-slate-50 dark:bg-slate-900 p-3 rounded-md border border-slate-100 dark:border-slate-800">
+          <span id="view-desc"></span>
+        </div>
+      </div>
+
+      <div class="px-5 py-3 bg-slate-50 dark:bg-slate-900/50 flex justify-end border-t border-slate-100 dark:border-slate-800">
+        <button onclick="deleteSelectedEvent()" class="flex items-center gap-1.5 px-3 py-1.5 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-md text-xs font-semibold transition-colors">
+          <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> 刪除紀錄
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Manage Categories Modal -->
+  <div id="category-modal" class="hidden fixed inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="bg-white dark:bg-[#0f0f11] border border-slate-200 dark:border-slate-800 rounded-xl w-full max-w-md shadow-xl overflow-hidden flex flex-col max-h-[90vh]">
+      <div class="px-5 py-4 flex justify-between items-center border-b border-slate-100 dark:border-slate-800/50">
+        <h3 class="text-base font-semibold flex items-center gap-2">
+          <i data-lucide="settings" class="w-4 h-4 text-slate-400"></i> 標籤管理
+        </h3>
+        <button onclick="closeCategoryModal()" class="text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+      
+      <div class="p-5 overflow-y-auto flex-1">
+        <form id="cat-form" class="bg-slate-50 dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-800 mb-6">
+          <h4 class="font-semibold text-xs text-slate-500 uppercase tracking-wide mb-3">新增分類</h4>
+          <div class="space-y-3">
+            <input required type="text" id="new-cat-name" placeholder="輸入分類名稱" class="w-full px-3 py-2 bg-white dark:bg-[#0f0f11] border border-slate-300 dark:border-slate-700 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 dark:focus:ring-slate-400">
+            
+            <input type="hidden" id="new-cat-theme" value="blue">
+            <div id="theme-selector" class="grid grid-cols-3 gap-2">
+              <!-- Injected by JS -->
+            </div>
+            
+            <button type="submit" class="w-full py-2 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 rounded-md text-sm font-medium transition-colors mt-2">建立標籤</button>
+          </div>
+        </form>
+
+        <h4 class="font-semibold text-xs text-slate-500 uppercase tracking-wide mb-3">現有分類</h4>
+        <div id="category-list" class="space-y-2">
+          <!-- Injected by JS -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- --- Firebase & Application Logic --- -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getFirestore, collection, onSnapshot, doc, deleteDoc, addDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    // --- Firebase Configuration ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyAXnSDK_kY4Aa8XvL0M_Md9kA4Wdow_Uvs",
+      authDomain: "daily-23c82.firebaseapp.com",
+      projectId: "daily-23c82",
+      storageBucket: "daily-23c82.firebasestorage.app",
+      messagingSenderId: "574719251457",
+      appId: "1:574719251457:web:30aadb364406783b175c00"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const globalAppId = 'daily-23c82-app';
+
+    // --- Theme Palette ---
+    const THEME_COLORS = {
+      blue: { id: 'blue', label: '藍色', allDay: 'bg-blue-500 text-white', timeEvent: 'bg-blue-50 dark:bg-blue-500/10 border-l-[3px] border-blue-500 text-blue-700 dark:text-blue-300' },
+      green: { id: 'green', label: '綠色', allDay: 'bg-green-500 text-white', timeEvent: 'bg-green-50 dark:bg-green-500/10 border-l-[3px] border-green-500 text-green-700 dark:text-green-300' },
+      red: { id: 'red', label: '紅色', allDay: 'bg-red-500 text-white', timeEvent: 'bg-red-50 dark:bg-red-500/10 border-l-[3px] border-red-500 text-red-700 dark:text-red-300' },
+      yellow: { id: 'yellow', label: '黃色', allDay: 'bg-yellow-500 text-white', timeEvent: 'bg-amber-50 dark:bg-yellow-500/10 border-l-[3px] border-yellow-500 text-amber-700 dark:text-yellow-300' },
+      purple: { id: 'purple', label: '紫色', allDay: 'bg-purple-500 text-white', timeEvent: 'bg-purple-50 dark:bg-purple-500/10 border-l-[3px] border-purple-500 text-purple-700 dark:text-purple-300' },
+      gray: { id: 'gray', label: '灰色', allDay: 'bg-gray-500 text-white', timeEvent: 'bg-gray-100 dark:bg-gray-800 border-l-[3px] border-gray-500 text-gray-700 dark:text-gray-300' }
+    };
+
+    // --- Global State ---
+    window.state = {
+      isDark: false,
+      user: null,
+      department: 'mis',
+      currentDate: new Date(),
+      events: [],
+      categories: [],
+      holidays: {},
+      selectedDateStr: null,
+      selectedEvent: null,
+      unsubEvents: null,
+      unsubCats: null
+    };
+
+    // --- Utility Functions ---
+    const formatToYYYYMMDD = (date) => {
+      const yyyy = date.getFullYear();
+      const mm = String(date.getMonth() + 1).padStart(2, '0');
+      const dd = String(date.getDate()).padStart(2, '0');
+      return `${yyyy}${mm}${dd}`;
+    };
+
+    const getCategoryTheme = (categoryId) => {
+      const cat = window.state.categories.find(c => c.id === categoryId);
+      if (!cat) return THEME_COLORS.gray;
+      if (cat.themeId && THEME_COLORS[cat.themeId]) return THEME_COLORS[cat.themeId];
+      const legacyStr = (cat.colorClass || '').toLowerCase();
+      if (legacyStr.includes('blue')) return THEME_COLORS.blue;
+      if (legacyStr.includes('green')) return THEME_COLORS.green;
+      if (legacyStr.includes('red')) return THEME_COLORS.red;
+      if (legacyStr.includes('yellow')) return THEME_COLORS.yellow;
+      if (legacyStr.includes('purple')) return THEME_COLORS.purple;
+      return THEME_COLORS.gray;
+    };
+
+    // --- UI Controls ---
+    window.toggleDarkMode = () => {
+      window.state.isDark = !window.state.isDark;
+      document.documentElement.classList.toggle('dark', window.state.isDark);
+      const icon = document.getElementById('theme-icon');
+      icon.setAttribute('data-lucide', window.state.isDark ? 'sun' : 'moon');
+      lucide.createIcons();
+    };
+
+    window.toggleDatePicker = () => {
+      const dp = document.getElementById('date-picker-dropdown');
+      dp.classList.toggle('hidden');
+    };
+
+    document.addEventListener('mousedown', (e) => {
+      const btn = document.querySelector('[onclick="toggleDatePicker()"]');
+      const dropdown = document.getElementById('date-picker-dropdown');
+      if (!btn.contains(e.target) && !dropdown.contains(e.target)) {
+        dropdown.classList.add('hidden');
+      }
+    });
+
+    // --- Navigation ---
+    window.prevMonth = () => {
+      window.state.currentDate = new Date(window.state.currentDate.getFullYear(), window.state.currentDate.getMonth() - 1, 1);
+      renderCalendar();
+    };
+    window.nextMonth = () => {
+      window.state.currentDate = new Date(window.state.currentDate.getFullYear(), window.state.currentDate.getMonth() + 1, 1);
+      renderCalendar();
+    };
+    window.goToToday = () => {
+      window.state.currentDate = new Date();
+      renderCalendar();
+    };
+    window.changeYearMonth = () => {
+      const y = document.getElementById('year-select').value;
+      const m = document.getElementById('month-select').value;
+      window.state.currentDate = new Date(y, m, 1);
+      document.getElementById('date-picker-dropdown').classList.add('hidden');
+      renderCalendar();
+    };
+
+    // --- Fetch Data ---
     const fetchHolidays = async () => {
-      const year = currentDate.getFullYear();
+      const year = window.state.currentDate.getFullYear();
       try {
         const response = await fetch(`https://cdn.jsdelivr.net/gh/ruyut/TaiwanCalendar/data/${year}.json`);
         if (response.ok) {
           const data = await response.json();
-          const holidayMap = {};
-          data.forEach(day => { if (day.isHoliday) holidayMap[day.date] = day.description || '休假日'; });
-          setHolidays(prev => ({ ...prev, ...holidayMap }));
+          data.forEach(day => { if (day.isHoliday) window.state.holidays[day.date] = day.description || '休假日'; });
+          renderCalendar();
         }
       } catch (error) { console.error(error); }
     };
-    fetchHolidays();
-  }, [currentDate.getFullYear()]);
 
-  useEffect(() => {
-    if (!user) return;
-    const deptKey = activeDepartment.toLowerCase();
-    const eventsRef = collection(db, 'artifacts', appId, 'public', 'data', `events_${deptKey}`);
-    const categoriesRef = collection(db, 'artifacts', appId, 'public', 'data', `categories_${deptKey}`);
+    const setupFirebaseListeners = () => {
+      if (!window.state.user) return;
+      if (window.state.unsubEvents) window.state.unsubEvents();
+      if (window.state.unsubCats) window.state.unsubCats();
 
-    const unsubEvents = onSnapshot(eventsRef, (snapshot) => {
-      const evts = [];
-      snapshot.forEach(doc => evts.push({ id: doc.id, ...doc.data() }));
-      setEvents(evts);
-    });
+      const deptKey = window.state.department.toLowerCase();
+      const eventsRef = collection(db, 'artifacts', globalAppId, 'public', 'data', `events_${deptKey}`);
+      const categoriesRef = collection(db, 'artifacts', globalAppId, 'public', 'data', `categories_${deptKey}`);
 
-    const unsubCats = onSnapshot(categoriesRef, (snapshot) => {
-      const cats = [];
-      snapshot.forEach(doc => cats.push({ id: doc.id, ...doc.data() }));
-      if (cats.length === 0) {
-        addDoc(categoriesRef, { name: '請假', themeId: 'blue' });
-        addDoc(categoriesRef, { name: '交辦事項', themeId: 'green' });
-      } else {
-        setCategories(cats);
+      window.state.unsubEvents = onSnapshot(eventsRef, (snapshot) => {
+        window.state.events = [];
+        snapshot.forEach(doc => window.state.events.push({ id: doc.id, ...doc.data() }));
+        renderCalendar();
+      });
+
+      window.state.unsubCats = onSnapshot(categoriesRef, (snapshot) => {
+        window.state.categories = [];
+        snapshot.forEach(doc => window.state.categories.push({ id: doc.id, ...doc.data() }));
+        if (window.state.categories.length === 0) {
+          addDoc(categoriesRef, { name: '請假', themeId: 'blue' });
+          addDoc(categoriesRef, { name: '交辦事項', themeId: 'green' });
+        }
+        updateCategoryOptions();
+        renderCategoryList();
+        renderCalendar();
+      });
+    };
+
+    // --- Department Switch ---
+    document.getElementById('dept-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const val = document.getElementById('dept-input').value.trim();
+      if (val) {
+        window.state.department = val;
+        document.getElementById('display-department').textContent = val;
+        setupFirebaseListeners();
       }
     });
 
-    return () => { unsubEvents(); unsubCats(); };
-  }, [user, activeDepartment]);
+    // --- Render Logic ---
+    const renderCalendar = () => {
+      const grid = document.getElementById('calendar-grid');
+      grid.innerHTML = '';
+      
+      const year = window.state.currentDate.getFullYear();
+      const month = window.state.currentDate.getMonth();
+      document.getElementById('current-month-year').textContent = `${year} 年 ${month + 1} 月`;
+      
+      // Update Date Picker Selects
+      const currentYearStr = year.toString();
+      if (!document.querySelector(`#year-select option[value="${currentYearStr}"]`)) {
+          // ensure current year is in dropdown if user navigated far
+          document.getElementById('year-select').innerHTML += `<option value="${year}">${year} 年</option>`;
+      }
+      document.getElementById('year-select').value = year;
+      document.getElementById('month-select').value = month;
 
-  const formatToYYYYMMDD = (date) => {
-    const yyyy = date.getFullYear();
-    const mm = String(date.getMonth() + 1).padStart(2, '0');
-    const dd = String(date.getDate()).padStart(2, '0');
-    return `${yyyy}${mm}${dd}`;
-  };
+      if (!window.state.holidays[`${year}0101`]) fetchHolidays();
 
-  // 核心修復：強健的顏色解析邏輯 (模糊匹配舊資料)
-  const getCategoryTheme = (categoryId) => {
-    const cat = categories.find(c => c.id === categoryId);
-    if (!cat) return THEME_COLORS.gray;
-    
-    // 如果已有新版 themeId 直接回傳
-    if (cat.themeId && THEME_COLORS[cat.themeId]) return THEME_COLORS[cat.themeId];
-    
-    // 向後相容：從舊的 colorClass 字串中捕捉關鍵字
-    const legacyStr = (cat.colorClass || '').toLowerCase();
-    if (legacyStr.includes('blue')) return THEME_COLORS.blue;
-    if (legacyStr.includes('green')) return THEME_COLORS.green;
-    if (legacyStr.includes('red')) return THEME_COLORS.red;
-    if (legacyStr.includes('yellow')) return THEME_COLORS.yellow;
-    if (legacyStr.includes('purple')) return THEME_COLORS.purple;
-    
-    return THEME_COLORS.gray;
-  };
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const firstDay = new Date(year, month, 1).getDay();
+      
+      const days = [];
+      for (let i = 0; i < firstDay; i++) days.push({ date: new Date(year, month, -firstDay + i + 1), isCurrent: false });
+      for (let i = 1; i <= daysInMonth; i++) days.push({ date: new Date(year, month, i), isCurrent: true });
+      const remainingDays = 42 - days.length; 
+      for (let i = 1; i <= remainingDays; i++) days.push({ date: new Date(year, month + 1, i), isCurrent: false });
 
-  const calendarDays = useMemo(() => {
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const firstDay = new Date(year, month, 1).getDay();
-    
-    const days = [];
-    for (let i = 0; i < firstDay; i++) days.push({ date: new Date(year, month, -firstDay + i + 1), isCurrentMonth: false });
-    for (let i = 1; i <= daysInMonth; i++) days.push({ date: new Date(year, month, i), isCurrentMonth: true });
-    const remainingDays = 42 - days.length; 
-    for (let i = 1; i <= remainingDays; i++) days.push({ date: new Date(year, month + 1, i), isCurrentMonth: false });
-    return days;
-  }, [currentDate]);
+      days.forEach(dayObj => {
+        const dateStr = formatToYYYYMMDD(dayObj.date);
+        const isWeekend = dayObj.date.getDay() === 0 || dayObj.date.getDay() === 6;
+        const holidayName = window.state.holidays[dateStr];
+        const isRedDay = isWeekend || holidayName;
+        const isToday = dateStr === formatToYYYYMMDD(new Date());
 
-  const handleDepartmentSwitch = (e) => {
-    e.preventDefault();
-    if (departmentInput.trim()) setActiveDepartment(departmentInput.trim());
-  };
+        const dayEvents = window.state.events.filter(e => e.dateString === dateStr).sort((a, b) => {
+          if (a.isAllDay !== b.isAllDay) return a.isAllDay ? -1 : 1;
+          return (a.startTime || '').localeCompare(b.startTime || '');
+        });
 
-  const openAddModal = (date) => {
-    setSelectedDate(date);
-    setFormData({ ...defaultForm, categoryId: categories[0]?.id || '' });
-    setShowEventModal(true);
-  };
+        let bgClass = 'bg-transparent';
+        let textClass = 'text-slate-900 dark:text-slate-100';
+        if (!dayObj.isCurrent) {
+          bgClass = 'bg-slate-50/50 dark:bg-[#111113]';
+          textClass = 'text-slate-400 dark:text-slate-600';
+        } else if (isRedDay) {
+          bgClass = 'bg-red-50/40 dark:bg-red-950/20';
+          textClass = 'text-red-600 dark:text-red-400';
+        }
 
-  const openViewModal = (e, event) => {
-    e.stopPropagation();
-    setSelectedEvent(event);
-    setShowViewModal(true);
-  };
+        const cell = document.createElement('div');
+        cell.className = `min-h-[140px] border-r border-b border-slate-200 dark:border-slate-800 p-1.5 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors flex flex-col ${bgClass}`;
+        cell.onclick = () => openAddModal(dateStr, dayObj.date.getFullYear(), dayObj.date.getMonth(), dayObj.date.getDate());
 
-  const startEditMode = () => {
-    const y = parseInt(selectedEvent.dateString.substring(0,4));
-    const m = parseInt(selectedEvent.dateString.substring(4,6)) - 1;
-    const d = parseInt(selectedEvent.dateString.substring(6,8));
-    setSelectedDate(new Date(y, m, d));
-    
-    setFormData({
-      id: selectedEvent.id,
-      title: selectedEvent.title,
-      name: selectedEvent.name,
-      categoryId: selectedEvent.categoryId,
-      description: selectedEvent.description || '',
-      isAllDay: selectedEvent.isAllDay,
-      startTime: selectedEvent.startTime || '09:00',
-      endTime: selectedEvent.endTime || '18:00'
-    });
-    setShowViewModal(false);
-    setShowEventModal(true);
-  };
+        let eventsHtml = dayEvents.map(evt => {
+          const theme = getCategoryTheme(evt.categoryId);
+          const evtJson = JSON.stringify(evt).replace(/"/g, '&quot;');
+          if (evt.isAllDay) {
+            return `<div onclick="openViewModal(event, '${evtJson}')" class="px-1.5 py-[3px] rounded-sm text-[11px] font-medium truncate hover:brightness-95 transition-all cursor-pointer ${theme.allDay}">${evt.name}: ${evt.title}</div>`;
+          }
+          return `<div onclick="openViewModal(event, '${evtJson}')" class="px-1.5 py-[3px] rounded-sm text-[11px] font-medium truncate hover:brightness-95 transition-all cursor-pointer ${theme.timeEvent}"><span class="font-bold mr-1 opacity-80">${evt.startTime}</span>${evt.name}: ${evt.title}</div>`;
+        }).join('');
 
-  const saveEvent = async (e) => {
-    e.preventDefault();
-    if (!user || !formData.title || !formData.name) return;
-
-    const deptKey = activeDepartment.toLowerCase();
-    const eventsRef = collection(db, 'artifacts', appId, 'public', 'data', `events_${deptKey}`);
-    
-    const eventPayload = {
-      dateString: formatToYYYYMMDD(selectedDate),
-      title: formData.title,
-      name: formData.name,
-      categoryId: formData.categoryId,
-      description: formData.description,
-      isAllDay: formData.isAllDay,
-      startTime: formData.isAllDay ? null : formData.startTime,
-      endTime: formData.isAllDay ? null : formData.endTime,
-      updatedAt: new Date().toISOString()
+        cell.innerHTML = `
+          <div class="flex flex-col items-center mb-1">
+            <div class="w-7 h-7 flex items-center justify-center rounded-full text-[13px] font-medium ${isToday ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900' : textClass}">${dayObj.date.getDate()}</div>
+            ${holidayName && dayObj.isCurrent ? `<span class="text-[10px] font-medium text-red-500 dark:text-red-400 truncate max-w-full px-1">${holidayName}</span>` : ''}
+          </div>
+          <div class="flex-1 overflow-y-auto space-y-[3px] mt-0.5 pr-0.5 custom-scrollbar">${eventsHtml}</div>
+        `;
+        grid.appendChild(cell);
+      });
+      lucide.createIcons();
     };
 
-    if (formData.id) {
-      await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', `events_${deptKey}`, formData.id), eventPayload);
-    } else {
-      eventPayload.createdAt = new Date().toISOString();
-      await addDoc(eventsRef, eventPayload);
-    }
-    setShowEventModal(false);
-  };
+    // --- Modal Logic ---
+    window.openAddModal = (dateStr, y, m, d) => {
+      window.state.selectedDateStr = dateStr;
+      document.getElementById('form-display-date').textContent = `${y}/${m+1}/${d}`;
+      document.getElementById('form-date-str').value = dateStr;
+      
+      // Reset form
+      document.getElementById('form-id').value = '';
+      document.getElementById('form-title').value = '';
+      document.getElementById('form-name').value = '';
+      document.getElementById('form-desc').value = '';
+      document.getElementById('form-is-allday').value = 'true';
+      updateAllDayUI(true);
+      document.getElementById('event-modal-title').innerHTML = '<i data-lucide="plus" class="w-4 h-4 text-slate-400"></i> 新增事項';
+      document.getElementById('form-submit-btn').textContent = '建立事項';
 
-  const deleteEvent = async () => {
-    if (!user || !selectedEvent) return;
-    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', `events_${activeDepartment.toLowerCase()}`, selectedEvent.id));
-    setShowViewModal(false);
-  };
+      if(window.state.categories.length > 0) document.getElementById('form-category').value = window.state.categories[0].id;
 
-  const saveCategory = async (e) => {
-    e.preventDefault();
-    if (!user || !newCategoryName) return;
-    const categoriesRef = collection(db, 'artifacts', appId, 'public', 'data', `categories_${activeDepartment.toLowerCase()}`);
-    
-    // 儲存時統一使用乾淨的 themeId
-    await addDoc(categoriesRef, {
-      name: newCategoryName,
-      themeId: newCategoryThemeId
+      document.getElementById('event-modal').classList.remove('hidden');
+      lucide.createIcons();
+    };
+
+    window.closeEventModal = () => document.getElementById('event-modal').classList.add('hidden');
+
+    window.openViewModal = (e, eventJson) => {
+      e.stopPropagation(); // prevent triggering add modal
+      const evt = JSON.parse(eventJson);
+      window.state.selectedEvent = evt;
+      
+      const theme = getCategoryTheme(evt.categoryId);
+      const cat = window.state.categories.find(c => c.id === evt.categoryId);
+      
+      document.getElementById('view-badge').className = `px-2 py-0.5 rounded text-[10px] font-bold tracking-wide ${theme.allDay}`;
+      document.getElementById('view-badge').textContent = cat ? cat.name : '未分類';
+      
+      document.getElementById('view-title').textContent = evt.title;
+      document.getElementById('view-date').textContent = `${evt.dateString.substring(0,4)}/${evt.dateString.substring(4,6)}/${evt.dateString.substring(6,8)}`;
+      document.getElementById('view-name').textContent = evt.name;
+      
+      if (evt.isAllDay) {
+        document.getElementById('view-time-container').classList.add('hidden');
+        document.getElementById('view-type').textContent = '全天';
+      } else {
+        document.getElementById('view-time-container').classList.remove('hidden');
+        document.getElementById('view-time').textContent = `${evt.startTime} - ${evt.endTime}`;
+        document.getElementById('view-type').textContent = '特定時間';
+      }
+
+      if (evt.description) {
+        document.getElementById('view-desc-container').classList.remove('hidden');
+        document.getElementById('view-desc').textContent = evt.description;
+      } else {
+        document.getElementById('view-desc-container').classList.add('hidden');
+      }
+
+      document.getElementById('view-modal').classList.remove('hidden');
+    };
+
+    window.closeViewModal = () => document.getElementById('view-modal').classList.add('hidden');
+
+    window.startEditMode = () => {
+      const evt = window.state.selectedEvent;
+      window.state.selectedDateStr = evt.dateString;
+      const y = parseInt(evt.dateString.substring(0,4));
+      const m = parseInt(evt.dateString.substring(4,6));
+      const d = parseInt(evt.dateString.substring(6,8));
+      
+      document.getElementById('form-display-date').textContent = `${y}/${m}/${d}`;
+      document.getElementById('form-date-str').value = evt.dateString;
+      document.getElementById('form-id').value = evt.id;
+      document.getElementById('form-title').value = evt.title;
+      document.getElementById('form-name').value = evt.name;
+      document.getElementById('form-category').value = evt.categoryId;
+      document.getElementById('form-desc').value = evt.description || '';
+      
+      document.getElementById('form-is-allday').value = evt.isAllDay ? 'true' : 'false';
+      updateAllDayUI(evt.isAllDay);
+      if(!evt.isAllDay) {
+        document.getElementById('form-start-time').value = evt.startTime;
+        document.getElementById('form-end-time').value = evt.endTime;
+      }
+
+      document.getElementById('event-modal-title').innerHTML = '<i data-lucide="edit-2" class="w-4 h-4 text-slate-400"></i> 編輯事項';
+      document.getElementById('form-submit-btn').textContent = '儲存變更';
+
+      closeViewModal();
+      document.getElementById('event-modal').classList.remove('hidden');
+      lucide.createIcons();
+    };
+
+    window.toggleAllDay = () => {
+      const input = document.getElementById('form-is-allday');
+      const isAllDay = input.value === 'true';
+      input.value = (!isAllDay).toString();
+      updateAllDayUI(!isAllDay);
+    };
+
+    const updateAllDayUI = (isAllDay) => {
+      const bg = document.getElementById('allday-toggle-bg');
+      const knob = document.getElementById('allday-toggle-knob');
+      const text = document.getElementById('allday-text');
+      const times = document.getElementById('time-inputs');
+
+      if (isAllDay) {
+        bg.className = 'w-7 h-4 rounded-full transition-colors relative bg-slate-900 dark:bg-slate-100';
+        knob.className = 'absolute top-[2px] left-[2px] bg-white dark:bg-slate-900 w-3 h-3 rounded-full transition-transform translate-x-3';
+        text.textContent = '全天';
+        times.classList.add('hidden');
+      } else {
+        bg.className = 'w-7 h-4 rounded-full transition-colors relative bg-slate-300 dark:bg-slate-700';
+        knob.className = 'absolute top-[2px] left-[2px] bg-white dark:bg-slate-900 w-3 h-3 rounded-full transition-transform ';
+        text.textContent = '指定時間';
+        times.classList.remove('hidden');
+      }
+    };
+
+    // --- Form Submissions ---
+    document.getElementById('event-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!window.state.user) return;
+
+      const id = document.getElementById('form-id').value;
+      const isAllDay = document.getElementById('form-is-allday').value === 'true';
+      
+      const payload = {
+        dateString: document.getElementById('form-date-str').value,
+        title: document.getElementById('form-title').value,
+        name: document.getElementById('form-name').value,
+        categoryId: document.getElementById('form-category').value,
+        description: document.getElementById('form-desc').value,
+        isAllDay: isAllDay,
+        startTime: isAllDay ? null : document.getElementById('form-start-time').value,
+        endTime: isAllDay ? null : document.getElementById('form-end-time').value,
+        updatedAt: new Date().toISOString()
+      };
+
+      const deptKey = window.state.department.toLowerCase();
+      
+      if (id) {
+        await updateDoc(doc(db, 'artifacts', globalAppId, 'public', 'data', `events_${deptKey}`, id), payload);
+      } else {
+        payload.createdAt = new Date().toISOString();
+        await addDoc(collection(db, 'artifacts', globalAppId, 'public', 'data', `events_${deptKey}`), payload);
+      }
+      closeEventModal();
     });
-    setNewCategoryName('');
-    setNewCategoryThemeId('blue');
-  };
 
-  const deleteCategory = async (id) => {
-    if (!user) return;
-    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', `categories_${activeDepartment.toLowerCase()}`, id));
-  };
+    window.deleteSelectedEvent = async () => {
+      if (!window.state.user || !window.state.selectedEvent) return;
+      const deptKey = window.state.department.toLowerCase();
+      await deleteDoc(doc(db, 'artifacts', globalAppId, 'public', 'data', `events_${deptKey}`, window.state.selectedEvent.id));
+      closeViewModal();
+    };
 
-  const years = Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - 5 + i);
-  const months = Array.from({ length: 12 }, (_, i) => i);
+    // --- Category Management ---
+    window.openCategoryModal = () => {
+      renderCategoryThemeSelector();
+      document.getElementById('category-modal').classList.remove('hidden');
+    };
+    window.closeCategoryModal = () => document.getElementById('category-modal').classList.add('hidden');
 
-  return (
-    <div className={`${isDark ? 'dark' : ''}`}>
-      <div className="min-h-screen bg-white dark:bg-[#09090b] text-slate-900 dark:text-slate-100 font-sans transition-colors duration-200">
-        
-        {/* --- Header (Clean SaaS Toolbar) --- */}
-        <header className="border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#09090b] px-4 md:px-6 py-3 flex flex-col md:flex-row justify-between items-center gap-4 sticky top-0 z-10">
-          <div className="flex items-center gap-3">
-            <div className="p-1.5 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 rounded-md">
-              <CalendarIcon size={20} />
-            </div>
-            <div>
-              <h1 className="text-base font-semibold tracking-tight leading-tight">部門共用行事曆</h1>
-              <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-                <span>部門空間:</span>
-                <span className="font-semibold text-slate-900 dark:text-white uppercase px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded">{activeDepartment}</span>
-              </div>
-            </div>
+    const updateCategoryOptions = () => {
+      const select = document.getElementById('form-category');
+      select.innerHTML = window.state.categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+    };
+
+    window.selectNewCatTheme = (themeId) => {
+      document.getElementById('new-cat-theme').value = themeId;
+      renderCategoryThemeSelector();
+    };
+
+    const renderCategoryThemeSelector = () => {
+      const container = document.getElementById('theme-selector');
+      const activeId = document.getElementById('new-cat-theme').value;
+      
+      container.innerHTML = Object.values(THEME_COLORS).map(theme => {
+        const isActive = activeId === theme.id;
+        const ringClass = isActive ? 'ring-2 ring-offset-1 ring-slate-900 dark:ring-slate-100 ring-offset-slate-50 dark:ring-offset-slate-900' : 'opacity-60 hover:opacity-100';
+        return `<div onclick="selectNewCatTheme('${theme.id}')" class="cursor-pointer px-2 py-1.5 rounded text-[11px] font-medium text-center transition-all ${theme.allDay} ${ringClass}">${theme.label.split(' ')[0]}</div>`;
+      }).join('');
+    };
+
+    const renderCategoryList = () => {
+      const container = document.getElementById('category-list');
+      container.innerHTML = window.state.categories.map(cat => {
+        const theme = getCategoryTheme(cat.id);
+        return `
+          <div class="flex justify-between items-center p-2.5 border border-slate-200 dark:border-slate-800 rounded-md bg-white dark:bg-transparent">
+            <span class="px-2 py-0.5 rounded text-[10px] font-medium ${theme.allDay}">${cat.name}</span>
+            <button onclick="deleteCategory('${cat.id}')" class="p-1.5 text-slate-400 hover:text-red-600 rounded-md transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
           </div>
+        `;
+      }).join('');
+      lucide.createIcons();
+    };
 
-          <div className="flex items-center gap-2 w-full md:w-auto">
-            <form onSubmit={handleDepartmentSwitch} className="flex flex-1 md:flex-none">
-              <div className="relative flex items-center w-full md:w-40">
-                <Building size={14} className="absolute left-2.5 text-slate-400" />
-                <input
-                  type="text"
-                  value={departmentInput}
-                  onChange={(e) => setDepartmentInput(e.target.value)}
-                  placeholder="部門代號"
-                  className="w-full pl-8 pr-3 py-1.5 text-sm border border-slate-200 dark:border-slate-800 rounded-l-md bg-transparent focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-600 uppercase"
-                />
-              </div>
-              <button type="submit" className="px-3 py-1.5 text-sm font-medium border border-l-0 border-slate-200 dark:border-slate-800 rounded-r-md bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 transition-colors">
-                切換
-              </button>
-            </form>
-            
-            <button onClick={() => setShowCategoryModal(true)} className="p-1.5 border border-slate-200 dark:border-slate-800 rounded-md text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors" title="管理分類">
-              <Settings size={18} />
-            </button>
-            <button onClick={() => setIsDark(!isDark)} className="p-1.5 border border-slate-200 dark:border-slate-800 rounded-md text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors" title="深淺色切換">
-              {isDark ? <Sun size={18} /> : <Moon size={18} />}
-            </button>
-          </div>
-        </header>
+    document.getElementById('cat-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!window.state.user) return;
+      
+      const name = document.getElementById('new-cat-name').value;
+      const themeId = document.getElementById('new-cat-theme').value;
+      
+      const deptKey = window.state.department.toLowerCase();
+      await addDoc(collection(db, 'artifacts', globalAppId, 'public', 'data', `categories_${deptKey}`), { name, themeId });
+      
+      document.getElementById('new-cat-name').value = '';
+      selectNewCatTheme('blue');
+    });
 
-        {/* --- Main Calendar Workspace --- */}
-        <main className="max-w-[1600px] mx-auto p-4 md:p-6 pb-20">
-          
-          {/* Calendar Controls */}
-          <div className="flex items-center justify-between mb-4">
-            <div className="relative" ref={datePickerRef}>
-              <button 
-                onClick={() => setShowDatePicker(!showDatePicker)}
-                className="flex items-center gap-1.5 text-xl font-bold hover:opacity-70 transition-opacity"
-              >
-                {currentDate.getFullYear()} 年 {currentDate.getMonth() + 1} 月
-                <ChevronDown size={20} className="text-slate-400" />
-              </button>
-              
-              {showDatePicker && (
-                <div className="absolute top-full mt-1 left-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-lg rounded-lg p-2 z-50 flex gap-2">
-                  <select 
-                    value={currentDate.getFullYear()}
-                    onChange={(e) => { setCurrentDate(new Date(Number(e.target.value), currentDate.getMonth(), 1)); setShowDatePicker(false); }}
-                    className="p-1.5 text-sm border border-slate-200 dark:border-slate-700 rounded bg-transparent outline-none cursor-pointer"
-                  >
-                    {years.map(y => <option key={y} value={y}>{y} 年</option>)}
-                  </select>
-                  <select 
-                    value={currentDate.getMonth()}
-                    onChange={(e) => { setCurrentDate(new Date(currentDate.getFullYear(), Number(e.target.value), 1)); setShowDatePicker(false); }}
-                    className="p-1.5 text-sm border border-slate-200 dark:border-slate-700 rounded bg-transparent outline-none cursor-pointer"
-                  >
-                    {months.map(m => <option key={m} value={m}>{m + 1} 月</option>)}
-                  </select>
-                </div>
-              )}
-            </div>
+    window.deleteCategory = async (id) => {
+      if (!window.state.user) return;
+      const deptKey = window.state.department.toLowerCase();
+      await deleteDoc(doc(db, 'artifacts', globalAppId, 'public', 'data', `categories_${deptKey}`, id));
+    };
 
-            <div className="flex items-center gap-1">
-              <button onClick={() => setCurrentDate(new Date())} className="px-3 py-1.5 text-sm font-medium border border-slate-200 dark:border-slate-800 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors mr-2">
-                今天
-              </button>
-              <button onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))} className="p-1.5 border border-slate-200 dark:border-slate-800 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                <ChevronLeft size={18} />
-              </button>
-              <button onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))} className="p-1.5 border border-slate-200 dark:border-slate-800 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                <ChevronRight size={18} />
-              </button>
-            </div>
-          </div>
+    // --- Initialization ---
+    const initApp = async () => {
+      // Init Selectors
+      const yearSelect = document.getElementById('year-select');
+      const monthSelect = document.getElementById('month-select');
+      const baseYear = new Date().getFullYear();
+      for(let i=0; i<10; i++) yearSelect.innerHTML += `<option value="${baseYear - 5 + i}">${baseYear - 5 + i} 年</option>`;
+      for(let i=0; i<12; i++) monthSelect.innerHTML += `<option value="${i}">${i + 1} 月</option>`;
 
-          {/* Seamless Grid Design (No gap-px, pure borders) */}
-          <div className="border-t border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-[#09090b]">
-            
-            {/* Days Header */}
-            <div className="grid grid-cols-7 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
-              {['週日', '週一', '週二', '週三', '週四', '週五', '週六'].map((day, idx) => (
-                <div key={day} className={`py-2 text-center text-xs font-semibold border-r border-slate-200 dark:border-slate-800 uppercase tracking-wider ${idx === 0 || idx === 6 ? 'text-red-500/80 dark:text-red-400/80' : 'text-slate-500'}`}>
-                  {day}
-                </div>
-              ))}
-            </div>
+      lucide.createIcons();
+      
+      // Auth
+      onAuthStateChanged(auth, (user) => {
+        if (user) {
+          window.state.user = user;
+          setupFirebaseListeners();
+        }
+      });
+      try { await signInAnonymously(auth); } catch (e) { console.error(e); }
+    };
 
-            {/* Calendar Grid */}
-            <div className="grid grid-cols-7 auto-rows-fr">
-              {calendarDays.map((dayObj, idx) => {
-                const dateStr = formatToYYYYMMDD(dayObj.date);
-                const isWeekend = dayObj.date.getDay() === 0 || dayObj.date.getDay() === 6;
-                const holidayName = holidays[dateStr];
-                const isRedDay = isWeekend || holidayName;
-                const isToday = dateStr === formatToYYYYMMDD(new Date());
-                
-                const dayEvents = events.filter(e => e.dateString === dateStr).sort((a, b) => {
-                  if (a.isAllDay !== b.isAllDay) return a.isAllDay ? -1 : 1;
-                  return (a.startTime || '').localeCompare(b.startTime || '');
-                });
+    // Start
+    window.addEventListener('DOMContentLoaded', initApp);
 
-                let bgClass = 'bg-transparent';
-                let textClass = 'text-slate-900 dark:text-slate-100';
-                
-                if (!dayObj.isCurrentMonth) {
-                  bgClass = 'bg-slate-50/50 dark:bg-[#111113]';
-                  textClass = 'text-slate-400 dark:text-slate-600';
-                } else if (isRedDay) {
-                  bgClass = 'bg-red-50/40 dark:bg-red-950/20';
-                  textClass = 'text-red-600 dark:text-red-400';
-                }
-
-                return (
-                  <div 
-                    key={idx} 
-                    onClick={() => openAddModal(dayObj.date)}
-                    className={`min-h-[140px] border-r border-b border-slate-200 dark:border-slate-800 p-1.5 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors flex flex-col ${bgClass}`}
-                  >
-                    <div className="flex flex-col items-center mb-1">
-                      <div className={`
-                        w-7 h-7 flex items-center justify-center rounded-full text-[13px] font-medium
-                        ${isToday ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900' : textClass}
-                      `}>
-                        {dayObj.date.getDate()}
-                      </div>
-                      {holidayName && dayObj.isCurrentMonth && (
-                        <span className="text-[10px] font-medium text-red-500 dark:text-red-400 truncate max-w-full px-1">
-                          {holidayName}
-                        </span>
-                      )}
-                    </div>
-                    
-                    {/* Absolutely Obvious Event Rendering */}
-                    <div className="flex-1 overflow-y-auto space-y-[3px] mt-0.5 pr-0.5 custom-scrollbar">
-                      {dayEvents.map(evt => {
-                        const theme = getCategoryTheme(evt.categoryId);
-                        
-                        // All Day: Solid Fill
-                        if (evt.isAllDay) {
-                          return (
-                            <div key={evt.id} onClick={(e) => openViewModal(e, evt)}
-                              className={`px-1.5 py-[3px] rounded-sm text-[11px] font-medium truncate hover:brightness-95 transition-all cursor-pointer ${theme.allDay}`}>
-                              {evt.name}: {evt.title}
-                            </div>
-                          );
-                        }
-                        
-                        // Timed Event: Thick Left Border + Light BG
-                        return (
-                          <div key={evt.id} onClick={(e) => openViewModal(e, evt)}
-                            className={`px-1.5 py-[3px] rounded-sm text-[11px] font-medium truncate hover:brightness-95 transition-all cursor-pointer ${theme.timeEvent}`}>
-                            <span className="font-bold mr-1 opacity-80">{evt.startTime}</span>
-                            {evt.name}: {evt.title}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </main>
-
-        <div className="fixed bottom-3 right-4 pointer-events-none">
-          <p className="text-[10px] font-medium text-slate-400 dark:text-slate-600 tracking-widest uppercase">
-            Crafted by <span className="font-bold">勝全</span> ✕ AI
-          </p>
-        </div>
-
-        {/* --- Modals (Shadcn-like Minimalist Style) --- */}
-        {showEventModal && (
-          <div className="fixed inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-[2px] flex items-center justify-center p-4 z-50">
-            <div className="bg-white dark:bg-[#0f0f11] border border-slate-200 dark:border-slate-800 rounded-xl w-full max-w-md shadow-xl overflow-hidden animate-in zoom-in-95 duration-200">
-              <div className="px-5 py-4 flex justify-between items-center border-b border-slate-100 dark:border-slate-800/50">
-                <h3 className="text-base font-semibold flex items-center gap-2">
-                  {formData.id ? <Edit2 size={16} className="text-slate-400" /> : <Plus size={16} className="text-slate-400" />}
-                  {formData.id ? '編輯事項' : '新增事項'}
-                </h3>
-                <button onClick={() => setShowEventModal(false)} className="text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
-                  <X size={18} />
-                </button>
-              </div>
-              
-              <form onSubmit={saveEvent} className="p-5 space-y-4">
-                <div className="flex gap-3">
-                  <div className="flex-1 bg-slate-50 dark:bg-slate-900 px-3 py-2 rounded-md border border-slate-200 dark:border-slate-800">
-                    <p className="text-[10px] text-slate-500 uppercase tracking-wide font-semibold mb-0.5">日期</p>
-                    <p className="text-sm font-medium">
-                      {selectedDate.getFullYear()}/{selectedDate.getMonth() + 1}/{selectedDate.getDate()}
-                    </p>
-                  </div>
-                  <div className="flex-1 bg-slate-50 dark:bg-slate-900 px-3 py-2 rounded-md border border-slate-200 dark:border-slate-800 flex flex-col justify-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                       onClick={() => setFormData({...formData, isAllDay: !formData.isAllDay})}>
-                    <p className="text-[10px] text-slate-500 uppercase tracking-wide font-semibold mb-0.5">模式</p>
-                    <div className="flex items-center gap-2">
-                      <div className={`w-7 h-4 rounded-full transition-colors relative ${formData.isAllDay ? 'bg-slate-900 dark:bg-slate-100' : 'bg-slate-300 dark:bg-slate-700'}`}>
-                        <div className={`absolute top-[2px] left-[2px] bg-white dark:bg-slate-900 w-3 h-3 rounded-full transition-transform ${formData.isAllDay ? 'translate-x-3' : ''}`}></div>
-                      </div>
-                      <span className="text-sm font-medium">{formData.isAllDay ? '全天' : '指定時間'}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {!formData.isAllDay && (
-                  <div className="flex gap-3 items-center">
-                    <div className="flex-1">
-                      <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">開始時間</label>
-                      <input type="time" required={!formData.isAllDay} className="w-full px-3 py-1.5 bg-transparent border border-slate-300 dark:border-slate-700 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 dark:focus:ring-slate-400" value={formData.startTime} onChange={e => setFormData({...formData, startTime: e.target.value})} />
-                    </div>
-                    <span className="text-slate-400 mt-5">-</span>
-                    <div className="flex-1">
-                      <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">結束時間</label>
-                      <input type="time" required={!formData.isAllDay} className="w-full px-3 py-1.5 bg-transparent border border-slate-300 dark:border-slate-700 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 dark:focus:ring-slate-400" value={formData.endTime} onChange={e => setFormData({...formData, endTime: e.target.value})} />
-                    </div>
-                  </div>
-                )}
-
-                <div>
-                  <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">事項標題 <span className="text-red-500">*</span></label>
-                  <input required type="text" className="w-full px-3 py-2 bg-transparent border border-slate-300 dark:border-slate-700 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 dark:focus:ring-slate-400" placeholder="例如：伺服器維護" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} />
-                </div>
-
-                <div className="flex gap-3">
-                  <div className="flex-1">
-                    <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">負責人姓名 <span className="text-red-500">*</span></label>
-                    <input required type="text" className="w-full px-3 py-2 bg-transparent border border-slate-300 dark:border-slate-700 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 dark:focus:ring-slate-400" placeholder="姓名" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
-                  </div>
-                  <div className="flex-1">
-                    <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">分類標籤 <span className="text-red-500">*</span></label>
-                    <select required className="w-full px-3 py-2 bg-transparent border border-slate-300 dark:border-slate-700 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 dark:focus:ring-slate-400" value={formData.categoryId} onChange={e => setFormData({...formData, categoryId: e.target.value})}>
-                      {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">詳細說明 (選填)</label>
-                  <textarea rows="2" className="w-full px-3 py-2 bg-transparent border border-slate-300 dark:border-slate-700 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 dark:focus:ring-slate-400 resize-none" placeholder="輸入備註細節..." value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})}></textarea>
-                </div>
-
-                <div className="pt-3 flex justify-end gap-2">
-                  <button type="button" onClick={() => setShowEventModal(false)} className="px-4 py-2 text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors">取消</button>
-                  <button type="submit" className="px-4 py-2 text-sm bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 rounded-md font-medium transition-colors shadow-sm">
-                    {formData.id ? '儲存變更' : '建立事項'}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-
-        {/* --- Modal: View Event --- */}
-        {showViewModal && selectedEvent && (
-          <div className="fixed inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-[2px] flex items-center justify-center p-4 z-50">
-            <div className="bg-white dark:bg-[#0f0f11] border border-slate-200 dark:border-slate-800 rounded-xl w-full max-w-sm shadow-xl overflow-hidden animate-in zoom-in-95 duration-200">
-              <div className="px-5 py-3 flex justify-between items-center border-b border-slate-100 dark:border-slate-800/50">
-                <div className={`px-2 py-0.5 rounded text-[10px] font-bold tracking-wide ${getCategoryTheme(selectedEvent.categoryId).allDay}`}>
-                  {categories.find(c => c.id === selectedEvent.categoryId)?.name || '未分類'}
-                </div>
-                <div className="flex gap-1">
-                  <button onClick={startEditMode} className="p-1 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors" title="編輯此紀錄"><Edit2 size={16} /></button>
-                  <button onClick={() => setShowViewModal(false)} className="p-1 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"><X size={16} /></button>
-                </div>
-              </div>
-              
-              <div className="p-5">
-                <h3 className="text-lg font-semibold mb-4 leading-tight">{selectedEvent.title}</h3>
-                
-                <div className="space-y-2 mb-6">
-                  <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400">
-                    <CalendarIcon size={16} className="text-slate-400" /> 
-                    <span>{selectedEvent.dateString.substring(0,4)}/{selectedEvent.dateString.substring(4,6)}/{selectedEvent.dateString.substring(6,8)}</span>
-                    {!selectedEvent.isAllDay && (
-                       <div className="flex items-center gap-1.5 pl-3 border-l border-slate-300 dark:border-slate-700 ml-1">
-                         <span className="font-medium text-slate-900 dark:text-slate-200">{selectedEvent.startTime} - {selectedEvent.endTime}</span>
-                       </div>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400">
-                    <User size={16} className="text-slate-400" /> 
-                    <span className="font-medium text-slate-900 dark:text-white">{selectedEvent.name}</span>
-                    <span className="text-[10px] px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-slate-500">
-                      {selectedEvent.isAllDay ? '全天' : '特定時間'}
-                    </span>
-                  </div>
-                </div>
-
-                {selectedEvent.description && (
-                  <div className="text-sm text-slate-600 dark:text-slate-300 whitespace-pre-wrap leading-relaxed bg-slate-50 dark:bg-slate-900 p-3 rounded-md border border-slate-100 dark:border-slate-800">
-                    {selectedEvent.description}
-                  </div>
-                )}
-              </div>
-
-              <div className="px-5 py-3 bg-slate-50 dark:bg-slate-900/50 flex justify-end border-t border-slate-100 dark:border-slate-800">
-                <button onClick={deleteEvent} className="flex items-center gap-1.5 px-3 py-1.5 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-md text-xs font-semibold transition-colors">
-                  <Trash2 size={14} /> 刪除紀錄
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* --- Modal: Manage Categories --- */}
-        {showCategoryModal && (
-          <div className="fixed inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-[2px] flex items-center justify-center p-4 z-50">
-            <div className="bg-white dark:bg-[#0f0f11] border border-slate-200 dark:border-slate-800 rounded-xl w-full max-w-md shadow-xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
-              <div className="px-5 py-4 flex justify-between items-center border-b border-slate-100 dark:border-slate-800/50">
-                <h3 className="text-base font-semibold flex items-center gap-2">
-                  <Settings size={16} className="text-slate-400" /> 標籤管理
-                </h3>
-                <button onClick={() => setShowCategoryModal(false)} className="text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
-                  <X size={18} />
-                </button>
-              </div>
-              
-              <div className="p-5 overflow-y-auto flex-1">
-                <form onSubmit={saveCategory} className="bg-slate-50 dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-800 mb-6">
-                  <h4 className="font-semibold text-xs text-slate-500 uppercase tracking-wide mb-3">新增分類</h4>
-                  <div className="space-y-3">
-                    <input required type="text" placeholder="輸入分類名稱" className="w-full px-3 py-2 bg-white dark:bg-[#0f0f11] border border-slate-300 dark:border-slate-700 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 dark:focus:ring-slate-400" value={newCategoryName} onChange={e => setNewCategoryName(e.target.value)} />
-                    
-                    <div className="grid grid-cols-3 gap-2">
-                      {Object.values(THEME_COLORS).map((theme) => (
-                        <div key={theme.id} onClick={() => setNewCategoryThemeId(theme.id)}
-                          className={`cursor-pointer px-2 py-1.5 rounded text-[11px] font-medium text-center transition-all ${theme.allDay} ${newCategoryThemeId === theme.id ? 'ring-2 ring-offset-1 ring-slate-900 dark:ring-slate-100 ring-offset-slate-50 dark:ring-offset-slate-900' : 'opacity-60 hover:opacity-100'}`}>
-                          {theme.label.split(' ')[0]}
-                        </div>
-                      ))}
-                    </div>
-                    
-                    <button type="submit" className="w-full py-2 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 rounded-md text-sm font-medium transition-colors mt-2">
-                      建立標籤
-                    </button>
-                  </div>
-                </form>
-
-                <h4 className="font-semibold text-xs text-slate-500 uppercase tracking-wide mb-3">現有分類</h4>
-                <div className="space-y-2">
-                  {categories.map(cat => {
-                    const theme = getCategoryTheme(cat.id);
-                    return (
-                      <div key={cat.id} className="flex justify-between items-center p-2.5 border border-slate-200 dark:border-slate-800 rounded-md bg-white dark:bg-transparent">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${theme.allDay}`}>
-                          {cat.name}
-                        </span>
-                        <button onClick={() => deleteCategory(cat.id)} className="p-1.5 text-slate-400 hover:text-red-600 rounded-md transition-colors">
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-        
-        <style dangerouslySetInnerHTML={{__html: `
-          .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-          .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-          .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-          .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; }
-          .custom-scrollbar:hover::-webkit-scrollbar-thumb { background: #94a3b8; }
-          .dark .custom-scrollbar:hover::-webkit-scrollbar-thumb { background: #475569; }
-        `}} />
-      </div>
-    </div>
-  );
-}
+  </script>
+</body>
+</html>
