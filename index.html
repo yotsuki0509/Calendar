@@ -172,8 +172,10 @@
         </div>
 
         <div>
-          <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">事項標題 <span class="text-red-500">*</span></label>
-          <input required type="text" id="form-title" class="w-full px-3 py-2 bg-transparent border border-slate-300 dark:border-slate-700 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 dark:focus:ring-slate-400" placeholder="例如：伺服器維護">
+          <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
+            事項標題 <span class="text-slate-400 font-normal tracking-normal normal-case ml-1">(選填，預設為分類名稱)</span>
+          </label>
+          <input type="text" id="form-title" class="w-full px-3 py-2 bg-transparent border border-slate-300 dark:border-slate-700 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 dark:focus:ring-slate-400" placeholder="未填寫將自動帶入分類名稱">
         </div>
 
         <div class="flex gap-3">
@@ -645,9 +647,16 @@
       const id = document.getElementById('form-id').value;
       const isAllDay = document.getElementById('form-is-allday').value === 'true';
       
+      // 判斷標題是否為空，若空則抓取當下選擇的分類名稱
+      const catSelect = document.getElementById('form-category');
+      let finalTitle = document.getElementById('form-title').value.trim();
+      if (!finalTitle) {
+        finalTitle = catSelect.options[catSelect.selectedIndex]?.text || '未命名事項';
+      }
+      
       const payload = {
         dateString: document.getElementById('form-date-str').value,
-        title: document.getElementById('form-title').value,
+        title: finalTitle,
         name: document.getElementById('form-name').value,
         categoryId: document.getElementById('form-category').value,
         description: document.getElementById('form-desc').value,
