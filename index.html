@@ -31,17 +31,17 @@
     .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
     .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-    .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; }
+    .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; }
     .custom-scrollbar:hover::-webkit-scrollbar-thumb { background: #94a3b8; }
-    .dark .custom-scrollbar:hover::-webkit-scrollbar-thumb { background: #475569; }
+    .dark .custom-scrollbar:hover::-webkit-scrollbar-thumb { background: #64748b; }
     
     .backdrop-blur-sm { backdrop-filter: blur(2px); }
   </style>
 </head>
-<body class="bg-white dark:bg-[#09090b] text-slate-900 dark:text-slate-100 font-sans transition-colors duration-200 min-h-screen pb-20">
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-sans transition-colors duration-200 min-h-screen pb-20">
 
   <!-- Header -->
-  <header class="border-b border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-[#09090b]/90 backdrop-blur-md px-4 md:px-6 py-3 flex flex-col md:flex-row justify-between items-center gap-4 sticky top-0 z-20">
+  <header class="border-b border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-4 md:px-6 py-3 flex flex-col md:flex-row justify-between items-center gap-4 sticky top-0 z-20">
     <div class="flex items-center gap-3">
       <div class="p-1.5 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 rounded-md shadow-sm">
         <i data-lucide="calendar" class="w-5 h-5"></i>
@@ -50,7 +50,7 @@
         <h1 class="text-base font-bold tracking-tight leading-tight">部門共用行事曆</h1>
         <div class="flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
           <span>部門:</span>
-          <span id="display-department" class="font-bold text-blue-600 dark:text-blue-400 uppercase px-1.5 py-0.5 bg-blue-50 dark:bg-blue-900/20 rounded"></span>
+          <span id="display-department" class="font-bold text-blue-600 dark:text-blue-400 uppercase px-1.5 py-0.5 bg-blue-50 dark:bg-blue-900/30 rounded"></span>
         </div>
       </div>
     </div>
@@ -59,15 +59,15 @@
       <form id="dept-form" class="flex flex-1 md:flex-none">
         <div class="relative flex items-center w-full md:w-40">
           <i data-lucide="building" class="absolute left-2.5 w-3.5 h-3.5 text-slate-400"></i>
-          <input type="text" id="dept-input" placeholder="切換部門代號" class="w-full pl-8 pr-3 py-1.5 text-sm font-medium border border-slate-200 dark:border-slate-800 rounded-l-md bg-transparent focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-600 uppercase">
+          <input type="text" id="dept-input" placeholder="切換部門代號" class="w-full pl-8 pr-3 py-1.5 text-sm font-medium border border-slate-200 dark:border-slate-700 rounded-l-md bg-white dark:bg-slate-800 focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-500 uppercase">
         </div>
-        <button type="submit" class="px-3 py-1.5 text-sm font-semibold border border-l-0 border-slate-200 dark:border-slate-800 rounded-r-md bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 transition-colors">切換</button>
+        <button type="submit" class="px-3 py-1.5 text-sm font-semibold border border-l-0 border-slate-200 dark:border-slate-700 rounded-r-md bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 transition-colors">切換</button>
       </form>
       
-      <button onclick="openModal('category-modal')" class="p-1.5 border border-slate-200 dark:border-slate-800 rounded-md text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm" title="管理分類">
+      <button onclick="openModal('category-modal')" class="p-1.5 border border-slate-200 dark:border-slate-700 rounded-md text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm" title="管理分類">
         <i data-lucide="settings" class="w-4 h-4"></i>
       </button>
-      <button onclick="toggleDarkMode()" class="p-1.5 border border-slate-200 dark:border-slate-800 rounded-md text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm" title="深淺色切換">
+      <button onclick="toggleDarkMode()" class="p-1.5 border border-slate-200 dark:border-slate-700 rounded-md text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm" title="深淺色切換">
         <i id="theme-icon" data-lucide="moon" class="w-4 h-4"></i>
       </button>
     </div>
@@ -85,9 +85,9 @@
             <i data-lucide="chevron-down" class="w-6 h-6 text-slate-400"></i>
           </button>
           
-          <div id="date-picker-dropdown" class="hidden absolute top-full mt-2 left-0 bg-white dark:bg-[#111113] border border-slate-200 dark:border-slate-800 shadow-xl rounded-lg p-3 z-40 flex gap-2">
-            <select id="year-select" onchange="changeYearMonth()" class="p-2 text-sm font-medium border border-slate-200 dark:border-slate-700 rounded bg-transparent outline-none cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"></select>
-            <select id="month-select" onchange="changeYearMonth()" class="p-2 text-sm font-medium border border-slate-200 dark:border-slate-700 rounded bg-transparent outline-none cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"></select>
+          <div id="date-picker-dropdown" class="hidden absolute top-full mt-2 left-0 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl rounded-lg p-3 z-40 flex gap-2">
+            <select id="year-select" onchange="changeYearMonth()" class="p-2 text-sm font-medium border border-slate-200 dark:border-slate-600 rounded bg-transparent outline-none cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"></select>
+            <select id="month-select" onchange="changeYearMonth()" class="p-2 text-sm font-medium border border-slate-200 dark:border-slate-600 rounded bg-transparent outline-none cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"></select>
           </div>
         </div>
       </div>
@@ -95,41 +95,41 @@
       <div class="flex flex-wrap items-center gap-2">
         <div class="relative flex items-center shadow-sm rounded-md">
           <i data-lucide="search" class="absolute left-2.5 w-3.5 h-3.5 text-slate-400"></i>
-          <input type="text" id="search-input" placeholder="搜尋人員或標題..." class="pl-8 pr-3 py-1.5 text-xs font-medium border border-slate-200 dark:border-slate-800 rounded-md bg-transparent focus:outline-none focus:ring-1 focus:ring-slate-400 w-36 sm:w-48 transition-colors">
+          <input type="text" id="search-input" placeholder="搜尋人員或標題..." class="pl-8 pr-3 py-1.5 text-xs font-medium border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800 focus:outline-none focus:ring-1 focus:ring-slate-400 w-36 sm:w-48 transition-colors">
         </div>
         
-        <select id="filter-category" class="py-1.5 px-2 text-xs font-medium border border-slate-200 dark:border-slate-800 rounded-md bg-transparent focus:outline-none focus:ring-1 focus:ring-slate-400 cursor-pointer transition-colors shadow-sm">
+        <select id="filter-category" class="py-1.5 px-2 text-xs font-medium border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800 focus:outline-none focus:ring-1 focus:ring-slate-400 cursor-pointer transition-colors shadow-sm">
           <option value="all">所有分類</option>
         </select>
 
-        <button onclick="exportToCSV()" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-slate-200 dark:border-slate-800 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm">
+        <button onclick="exportToCSV()" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm">
           <i data-lucide="download" class="w-3.5 h-3.5 text-slate-500"></i> <span class="hidden sm:inline">匯出報表</span>
         </button>
 
-        <div class="h-6 w-px bg-slate-200 dark:bg-slate-800 mx-1"></div>
+        <div class="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-1"></div>
 
-        <button onclick="goToToday()" class="px-3 py-1.5 text-xs font-bold border border-slate-200 dark:border-slate-800 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm">今天</button>
-        <div class="flex items-center rounded-md border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
-          <button onclick="prevMonth()" class="p-1.5 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors border-r border-slate-200 dark:border-slate-800">
+        <button onclick="goToToday()" class="px-3 py-1.5 text-xs font-bold border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm">今天</button>
+        <div class="flex items-center rounded-md border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm bg-white dark:bg-slate-800">
+          <button onclick="prevMonth()" class="p-1.5 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors border-r border-slate-200 dark:border-slate-700">
             <i data-lucide="chevron-left" class="w-4 h-4"></i>
           </button>
-          <button onclick="nextMonth()" class="p-1.5 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+          <button onclick="nextMonth()" class="p-1.5 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
             <i data-lucide="chevron-right" class="w-4 h-4"></i>
           </button>
         </div>
       </div>
     </div>
 
-    <!-- Calendar Grid -->
-    <div class="border-t border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-[#09090b] rounded-bl-lg rounded-br-lg shadow-sm">
-      <div class="grid grid-cols-7 border-b border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/90 backdrop-blur-sm sticky top-[60px] z-10">
-        <div class="py-2.5 text-center text-xs font-bold border-r border-slate-200 dark:border-slate-800 tracking-widest text-red-500/80 dark:text-red-400/80">週日</div>
-        <div class="py-2.5 text-center text-xs font-bold border-r border-slate-200 dark:border-slate-800 tracking-widest text-slate-500">週一</div>
-        <div class="py-2.5 text-center text-xs font-bold border-r border-slate-200 dark:border-slate-800 tracking-widest text-slate-500">週二</div>
-        <div class="py-2.5 text-center text-xs font-bold border-r border-slate-200 dark:border-slate-800 tracking-widest text-slate-500">週三</div>
-        <div class="py-2.5 text-center text-xs font-bold border-r border-slate-200 dark:border-slate-800 tracking-widest text-slate-500">週四</div>
-        <div class="py-2.5 text-center text-xs font-bold border-r border-slate-200 dark:border-slate-800 tracking-widest text-slate-500">週五</div>
-        <div class="py-2.5 text-center text-xs font-bold border-r border-slate-200 dark:border-slate-800 tracking-widest text-red-500/80 dark:text-red-400/80">週六</div>
+    <!-- Calendar Grid (卡片化層次) -->
+    <div class="border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-xl shadow-sm overflow-hidden">
+      <div class="grid grid-cols-7 border-b border-slate-200 dark:border-slate-700 bg-slate-50/90 dark:bg-slate-800/90 backdrop-blur-sm sticky top-[60px] z-10">
+        <div class="py-2.5 text-center text-xs font-bold border-r border-slate-200 dark:border-slate-700 tracking-widest text-red-500/80 dark:text-red-400/80">週日</div>
+        <div class="py-2.5 text-center text-xs font-bold border-r border-slate-200 dark:border-slate-700 tracking-widest text-slate-500">週一</div>
+        <div class="py-2.5 text-center text-xs font-bold border-r border-slate-200 dark:border-slate-700 tracking-widest text-slate-500">週二</div>
+        <div class="py-2.5 text-center text-xs font-bold border-r border-slate-200 dark:border-slate-700 tracking-widest text-slate-500">週三</div>
+        <div class="py-2.5 text-center text-xs font-bold border-r border-slate-200 dark:border-slate-700 tracking-widest text-slate-500">週四</div>
+        <div class="py-2.5 text-center text-xs font-bold border-r border-slate-200 dark:border-slate-700 tracking-widest text-slate-500">週五</div>
+        <div class="py-2.5 text-center text-xs font-bold text-red-500/80 dark:text-red-400/80 tracking-widest">週六</div>
       </div>
       <div id="calendar-grid" class="grid grid-cols-7 auto-rows-fr"></div>
     </div>
@@ -137,7 +137,7 @@
 
   <div id="toast-container" class="fixed bottom-6 right-6 z-[70] flex flex-col gap-3 pointer-events-none"></div>
 
-  <div class="fixed bottom-4 right-5 z-[40] pointer-events-none bg-white/80 dark:bg-[#0a0a0b]/80 backdrop-blur-md px-3.5 py-1.5 rounded-full shadow-sm border border-slate-200/80 dark:border-slate-800">
+  <div class="fixed bottom-4 right-5 z-[40] pointer-events-none bg-white/80 dark:bg-slate-800/80 backdrop-blur-md px-3.5 py-1.5 rounded-full shadow-sm border border-slate-200/80 dark:border-slate-700">
     <p class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 tracking-widest uppercase">
       Crafted by <span class="font-black text-slate-900 dark:text-white">勝全</span> ✕ AI
     </p>
@@ -147,12 +147,12 @@
   
   <!-- Add/Edit Event Modal -->
   <div id="event-modal" class="fixed inset-0 bg-slate-900/20 dark:bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 opacity-0 pointer-events-none transition-opacity duration-200">
-    <div class="modal-content bg-white dark:bg-[#0f0f11] border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden scale-95 transition-transform duration-200">
-      <div class="px-5 py-4 flex justify-between items-center border-b border-slate-100 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-900/50">
+    <div class="modal-content bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden scale-95 transition-transform duration-200">
+      <div class="px-5 py-4 flex justify-between items-center border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
         <h3 id="event-modal-title" class="text-base font-bold flex items-center gap-2 text-slate-800 dark:text-white">
           <i data-lucide="plus" class="w-4 h-4 text-blue-500"></i> 新增事項
         </h3>
-        <button onclick="closeModal('event-modal')" class="text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 p-1.5 rounded-md transition-colors">
+        <button onclick="closeModal('event-modal')" class="text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 p-1.5 rounded-md transition-colors">
           <i data-lucide="x" class="w-4 h-4"></i>
         </button>
       </div>
@@ -160,15 +160,14 @@
       <form id="event-form" class="p-5 space-y-4">
         <input type="hidden" id="form-id">
         
-        <!-- 修正的 Date Group 與全天 Toggle 按鈕排版 -->
         <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
           <div class="flex-1 w-full">
             <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">開始日期</label>
-            <input required type="text" id="form-start-date" class="w-full px-3 py-2 font-medium bg-white dark:bg-[#09090b] border border-slate-300 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 cursor-pointer" placeholder="選擇日期">
+            <input required type="text" id="form-start-date" class="w-full px-3 py-2 font-medium bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 cursor-pointer" placeholder="選擇日期">
           </div>
           <div class="flex-1 w-full">
             <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">結束日期</label>
-            <input required type="text" id="form-end-date" class="w-full px-3 py-2 font-medium bg-white dark:bg-[#09090b] border border-slate-300 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 cursor-pointer" placeholder="選擇日期">
+            <input required type="text" id="form-end-date" class="w-full px-3 py-2 font-medium bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 cursor-pointer" placeholder="選擇日期">
           </div>
           <div class="flex items-center gap-2 pb-2.5 cursor-pointer group shrink-0" onclick="toggleAllDay()">
             <div id="allday-toggle-bg" class="w-9 h-5 rounded-full transition-colors relative bg-blue-600 dark:bg-blue-500">
@@ -179,23 +178,21 @@
           </div>
         </div>
 
-        <!-- 自訂時間輸入區塊 + 每日重複 Toggle -->
-        <div id="time-inputs" class="hidden flex flex-col sm:flex-row gap-4 sm:items-center p-3 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-100 dark:border-slate-800">
+        <div id="time-inputs" class="hidden flex flex-col sm:flex-row gap-4 sm:items-center p-3 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-100 dark:border-slate-700">
           <div class="flex flex-1 items-center gap-4 w-full">
             <div class="flex-1 w-full">
               <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">開始時間</label>
-              <input type="text" id="form-start-time" readonly onclick="openCustomTimePicker('form-start-time')" class="w-full px-3 py-1.5 font-bold text-blue-600 dark:text-blue-400 bg-white dark:bg-[#09090b] border border-slate-200 dark:border-slate-700 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 cursor-pointer text-center shadow-sm" placeholder="選擇時間" value="09:00">
+              <input type="text" id="form-start-time" readonly onclick="openCustomTimePicker('form-start-time')" class="w-full px-3 py-1.5 font-bold text-blue-600 dark:text-blue-400 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 cursor-pointer text-center shadow-sm" placeholder="選擇時間" value="09:00">
             </div>
             <span class="text-slate-400 mt-5"><i data-lucide="arrow-right" class="w-4 h-4"></i></span>
             <div class="flex-1 w-full">
               <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">結束時間</label>
-              <input type="text" id="form-end-time" readonly onclick="openCustomTimePicker('form-end-time')" class="w-full px-3 py-1.5 font-bold text-blue-600 dark:text-blue-400 bg-white dark:bg-[#09090b] border border-slate-200 dark:border-slate-700 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 cursor-pointer text-center shadow-sm" placeholder="選擇時間" value="17:00">
+              <input type="text" id="form-end-time" readonly onclick="openCustomTimePicker('form-end-time')" class="w-full px-3 py-1.5 font-bold text-blue-600 dark:text-blue-400 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 cursor-pointer text-center shadow-sm" placeholder="選擇時間" value="17:00">
             </div>
           </div>
-          <!-- 每日重複開關 (解決連續 vs 重複的系統矛盾) -->
-          <div class="flex items-center justify-end sm:justify-start gap-2 sm:pt-5 cursor-pointer group shrink-0 border-t sm:border-t-0 sm:border-l border-slate-200 dark:border-slate-700 pt-3 sm:pl-4 sm:ml-1" onclick="toggleDailyRepeat()" title="開啟後，所選期間的每一天都會獨立顯示這個時段">
+          <div class="flex items-center justify-end sm:justify-start gap-2 sm:pt-5 cursor-pointer group shrink-0 border-t sm:border-t-0 sm:border-l border-slate-200 dark:border-slate-600 pt-3 sm:pl-4 sm:ml-1" onclick="toggleDailyRepeat()" title="開啟後，所選期間的每一天都會獨立顯示這個時段">
             <span id="daily-text" class="text-[11px] font-bold text-slate-500 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">每日此時段</span>
-            <div id="daily-toggle-bg" class="w-9 h-5 rounded-full transition-colors relative bg-slate-300 dark:bg-slate-700">
+            <div id="daily-toggle-bg" class="w-9 h-5 rounded-full transition-colors relative bg-slate-300 dark:bg-slate-600">
               <div id="daily-toggle-knob" class="absolute top-[2px] left-[2px] bg-white w-4 h-4 rounded-full transition-transform translate-x-0 shadow-sm"></div>
             </div>
             <input type="hidden" id="form-is-daily" value="false">
@@ -205,11 +202,11 @@
         <div class="flex flex-col sm:flex-row gap-4">
           <div class="flex-1">
             <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">負責人姓名 <span class="text-red-500">*</span></label>
-            <input required type="text" id="form-name" class="w-full px-3 py-2 font-medium bg-transparent border border-slate-300 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50" placeholder="例如: 王大明">
+            <input required type="text" id="form-name" class="w-full px-3 py-2 font-medium bg-transparent border border-slate-300 dark:border-slate-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50" placeholder="例如: 王大明">
           </div>
           <div class="flex-1">
             <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">分類標籤 <span class="text-red-500">*</span></label>
-            <select required id="form-category" class="w-full px-3 py-2 font-medium bg-transparent border border-slate-300 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 cursor-pointer">
+            <select required id="form-category" class="w-full px-3 py-2 font-medium bg-transparent border border-slate-300 dark:border-slate-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 cursor-pointer">
             </select>
           </div>
         </div>
@@ -219,7 +216,7 @@
             <span>事項標題</span>
             <span class="text-slate-400 font-normal tracking-normal normal-case">(未填將預設為標籤名)</span>
           </label>
-          <input type="text" id="form-title" class="w-full px-3 py-2 font-medium bg-transparent border border-slate-300 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50" placeholder="例如: 例行維護作業">
+          <input type="text" id="form-title" class="w-full px-3 py-2 font-medium bg-transparent border border-slate-300 dark:border-slate-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50" placeholder="例如: 例行維護作業">
         </div>
 
         <div>
@@ -227,11 +224,11 @@
             <span>詳細說明</span>
             <span class="text-slate-400 font-normal tracking-normal normal-case">(選填，支援貼上網址)</span>
           </label>
-          <textarea rows="3" id="form-desc" class="w-full px-3 py-2 bg-transparent border border-slate-300 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 resize-none custom-scrollbar" placeholder="輸入備註細節或貼上會議連結..."></textarea>
+          <textarea rows="3" id="form-desc" class="w-full px-3 py-2 bg-transparent border border-slate-300 dark:border-slate-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 resize-none custom-scrollbar" placeholder="輸入備註細節或貼上會議連結..."></textarea>
         </div>
 
-        <div class="pt-3 flex justify-end gap-2 border-t border-slate-100 dark:border-slate-800 mt-2">
-          <button type="button" onclick="closeModal('event-modal')" class="px-5 py-2 mt-2 text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">取消</button>
+        <div class="pt-3 flex justify-end gap-2 border-t border-slate-100 dark:border-slate-700 mt-2">
+          <button type="button" onclick="closeModal('event-modal')" class="px-5 py-2 mt-2 text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors">取消</button>
           <button type="submit" id="form-submit-btn" class="px-6 py-2 mt-2 text-sm font-bold bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 rounded-lg transition-colors shadow-md">建立事項</button>
         </div>
       </form>
@@ -239,12 +236,12 @@
   </div>
 
   <div id="time-picker-modal" class="fixed inset-0 bg-slate-900/30 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-[60] opacity-0 pointer-events-none transition-opacity duration-200">
-    <div class="modal-content bg-white dark:bg-[#0f0f11] border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-xs shadow-2xl overflow-hidden scale-95 transition-transform duration-200">
-      <div class="px-5 py-3.5 flex justify-between items-center border-b border-slate-100 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-900/50">
+    <div class="modal-content bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl w-full max-w-xs shadow-2xl overflow-hidden scale-95 transition-transform duration-200">
+      <div class="px-5 py-3.5 flex justify-between items-center border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
         <h3 class="text-base font-bold flex items-center gap-2 text-slate-800 dark:text-white">
           <i data-lucide="clock" class="w-4 h-4 text-blue-500"></i> <span id="time-picker-title">選擇時間</span>
         </h3>
-        <button onclick="closeModal('time-picker-modal')" class="text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 p-1 rounded-md transition-colors">
+        <button onclick="closeModal('time-picker-modal')" class="text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 p-1 rounded-md transition-colors">
           <i data-lucide="x" class="w-4 h-4"></i>
         </button>
       </div>
@@ -253,35 +250,35 @@
         <div class="mb-4">
           <div class="text-[11px] font-bold text-slate-400 mb-2 uppercase tracking-widest flex items-center gap-1.5"><i data-lucide="sun" class="w-3.5 h-3.5"></i> 上午 (AM)</div>
           <div class="grid grid-cols-5 gap-1.5">
-            <button type="button" onclick="selectTimePickerHour(8)" class="tp-hr tp-hr-8 py-2 rounded-lg font-bold text-sm bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-blue-500 transition-all">08</button>
-            <button type="button" onclick="selectTimePickerHour(9)" class="tp-hr tp-hr-9 py-2 rounded-lg font-bold text-sm bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-blue-500 transition-all">09</button>
-            <button type="button" onclick="selectTimePickerHour(10)" class="tp-hr tp-hr-10 py-2 rounded-lg font-bold text-sm bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-blue-500 transition-all">10</button>
-            <button type="button" onclick="selectTimePickerHour(11)" class="tp-hr tp-hr-11 py-2 rounded-lg font-bold text-sm bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-blue-500 transition-all">11</button>
-            <button type="button" onclick="selectTimePickerHour(12)" class="tp-hr tp-hr-12 py-2 rounded-lg font-bold text-sm bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-blue-500 transition-all">12</button>
+            <button type="button" onclick="selectTimePickerHour(8)" class="tp-hr tp-hr-8 py-2 rounded-lg font-bold text-sm bg-slate-50 dark:bg-slate-900/50 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600 hover:border-blue-500 transition-all">08</button>
+            <button type="button" onclick="selectTimePickerHour(9)" class="tp-hr tp-hr-9 py-2 rounded-lg font-bold text-sm bg-slate-50 dark:bg-slate-900/50 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600 hover:border-blue-500 transition-all">09</button>
+            <button type="button" onclick="selectTimePickerHour(10)" class="tp-hr tp-hr-10 py-2 rounded-lg font-bold text-sm bg-slate-50 dark:bg-slate-900/50 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600 hover:border-blue-500 transition-all">10</button>
+            <button type="button" onclick="selectTimePickerHour(11)" class="tp-hr tp-hr-11 py-2 rounded-lg font-bold text-sm bg-slate-50 dark:bg-slate-900/50 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600 hover:border-blue-500 transition-all">11</button>
+            <button type="button" onclick="selectTimePickerHour(12)" class="tp-hr tp-hr-12 py-2 rounded-lg font-bold text-sm bg-slate-50 dark:bg-slate-900/50 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600 hover:border-blue-500 transition-all">12</button>
           </div>
         </div>
 
         <div class="mb-5">
           <div class="text-[11px] font-bold text-slate-400 mb-2 uppercase tracking-widest flex items-center justify-between">
             <span class="flex items-center gap-1.5"><i data-lucide="sunset" class="w-3.5 h-3.5"></i> 下午 (PM)</span>
-            <span class="text-[9px] bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-500">選 1 即 13:00</span>
+            <span class="text-[9px] bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded text-slate-400">選 1 即 13:00</span>
           </div>
           <div class="grid grid-cols-5 gap-1.5">
-            <button type="button" onclick="selectTimePickerHour(13)" class="tp-hr tp-hr-13 py-2 rounded-lg font-bold text-sm bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-blue-500 transition-all">1</button>
-            <button type="button" onclick="selectTimePickerHour(14)" class="tp-hr tp-hr-14 py-2 rounded-lg font-bold text-sm bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-blue-500 transition-all">2</button>
-            <button type="button" onclick="selectTimePickerHour(15)" class="tp-hr tp-hr-15 py-2 rounded-lg font-bold text-sm bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-blue-500 transition-all">3</button>
-            <button type="button" onclick="selectTimePickerHour(16)" class="tp-hr tp-hr-16 py-2 rounded-lg font-bold text-sm bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-blue-500 transition-all">4</button>
-            <button type="button" onclick="selectTimePickerHour(17)" class="tp-hr tp-hr-17 py-2 rounded-lg font-bold text-sm bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-blue-500 transition-all">5</button>
+            <button type="button" onclick="selectTimePickerHour(13)" class="tp-hr tp-hr-13 py-2 rounded-lg font-bold text-sm bg-slate-50 dark:bg-slate-900/50 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600 hover:border-blue-500 transition-all">1</button>
+            <button type="button" onclick="selectTimePickerHour(14)" class="tp-hr tp-hr-14 py-2 rounded-lg font-bold text-sm bg-slate-50 dark:bg-slate-900/50 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600 hover:border-blue-500 transition-all">2</button>
+            <button type="button" onclick="selectTimePickerHour(15)" class="tp-hr tp-hr-15 py-2 rounded-lg font-bold text-sm bg-slate-50 dark:bg-slate-900/50 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600 hover:border-blue-500 transition-all">3</button>
+            <button type="button" onclick="selectTimePickerHour(16)" class="tp-hr tp-hr-16 py-2 rounded-lg font-bold text-sm bg-slate-50 dark:bg-slate-900/50 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600 hover:border-blue-500 transition-all">4</button>
+            <button type="button" onclick="selectTimePickerHour(17)" class="tp-hr tp-hr-17 py-2 rounded-lg font-bold text-sm bg-slate-50 dark:bg-slate-900/50 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600 hover:border-blue-500 transition-all">5</button>
           </div>
         </div>
 
-        <div class="mb-5 pt-4 border-t border-slate-100 dark:border-slate-800/60">
+        <div class="mb-5 pt-4 border-t border-slate-100 dark:border-slate-700">
           <div class="text-[11px] font-bold text-slate-400 mb-2 uppercase tracking-widest flex items-center gap-1.5"><i data-lucide="timer" class="w-3.5 h-3.5"></i> 分鐘</div>
           <div class="grid grid-cols-4 gap-2">
-            <button type="button" onclick="selectTimePickerMin(0)" class="tp-min tp-min-0 py-2 rounded-lg font-bold text-sm bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-blue-500 transition-all">00</button>
-            <button type="button" onclick="selectTimePickerMin(15)" class="tp-min tp-min-15 py-2 rounded-lg font-bold text-sm bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-blue-500 transition-all">15</button>
-            <button type="button" onclick="selectTimePickerMin(30)" class="tp-min tp-min-30 py-2 rounded-lg font-bold text-sm bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-blue-500 transition-all">30</button>
-            <button type="button" onclick="selectTimePickerMin(45)" class="tp-min tp-min-45 py-2 rounded-lg font-bold text-sm bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-blue-500 transition-all">45</button>
+            <button type="button" onclick="selectTimePickerMin(0)" class="tp-min tp-min-0 py-2 rounded-lg font-bold text-sm bg-slate-50 dark:bg-slate-900/50 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600 hover:border-blue-500 transition-all">00</button>
+            <button type="button" onclick="selectTimePickerMin(15)" class="tp-min tp-min-15 py-2 rounded-lg font-bold text-sm bg-slate-50 dark:bg-slate-900/50 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600 hover:border-blue-500 transition-all">15</button>
+            <button type="button" onclick="selectTimePickerMin(30)" class="tp-min tp-min-30 py-2 rounded-lg font-bold text-sm bg-slate-50 dark:bg-slate-900/50 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600 hover:border-blue-500 transition-all">30</button>
+            <button type="button" onclick="selectTimePickerMin(45)" class="tp-min tp-min-45 py-2 rounded-lg font-bold text-sm bg-slate-50 dark:bg-slate-900/50 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600 hover:border-blue-500 transition-all">45</button>
           </div>
         </div>
         
@@ -294,19 +291,19 @@
   </div>
 
   <div id="view-modal" class="fixed inset-0 bg-slate-900/20 dark:bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 opacity-0 pointer-events-none transition-opacity duration-200">
-    <div class="modal-content bg-white dark:bg-[#0f0f11] border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden scale-95 transition-transform duration-200">
-      <div class="px-6 py-4 flex justify-between items-center border-b border-slate-100 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-900/50">
+    <div class="modal-content bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden scale-95 transition-transform duration-200">
+      <div class="px-6 py-4 flex justify-between items-center border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
         <div id="view-badge" class="px-2.5 py-1 rounded-[4px] text-[10px] font-bold tracking-widest uppercase">未分類</div>
         <div class="flex gap-1.5">
-          <button onclick="startEditMode()" class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-slate-800 rounded-md transition-colors" title="編輯此紀錄"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
-          <button onclick="closeModal('view-modal')" class="p-1.5 text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors"><i data-lucide="x" class="w-4 h-4"></i></button>
+          <button onclick="startEditMode()" class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-slate-700 rounded-md transition-colors" title="編輯此紀錄"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
+          <button onclick="closeModal('view-modal')" class="p-1.5 text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md transition-colors"><i data-lucide="x" class="w-4 h-4"></i></button>
         </div>
       </div>
       
       <div class="p-6">
         <h3 id="view-title" class="text-xl font-bold mb-5 leading-tight break-words text-slate-900 dark:text-white">標題</h3>
         
-        <div class="space-y-3 mb-6 bg-slate-50 dark:bg-slate-900/40 p-4 rounded-xl border border-slate-100 dark:border-slate-800/50">
+        <div class="space-y-3 mb-6 bg-slate-50 dark:bg-slate-900/40 p-4 rounded-xl border border-slate-100 dark:border-slate-700/50">
           <div class="flex items-start gap-3 text-sm text-slate-600 dark:text-slate-300">
             <i data-lucide="calendar" class="w-4 h-4 text-slate-400 min-w-[16px] mt-0.5"></i>
             <div>
@@ -316,11 +313,11 @@
               </div>
             </div>
           </div>
-          <div class="h-px w-full bg-slate-200/60 dark:bg-slate-700/50"></div>
+          <div class="h-px w-full bg-slate-200/60 dark:bg-slate-600/50"></div>
           <div class="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
             <i data-lucide="user" class="w-4 h-4 text-slate-400 min-w-[16px]"></i>
             <span id="view-name" class="font-bold text-slate-800 dark:text-slate-200">姓名</span>
-            <span id="view-type" class="text-[10px] px-2 py-0.5 bg-slate-200/50 dark:bg-slate-800 rounded font-bold tracking-wider text-slate-500 ml-auto">全天</span>
+            <span id="view-type" class="text-[10px] px-2 py-0.5 bg-slate-200/50 dark:bg-slate-700 rounded font-bold tracking-wider text-slate-400 ml-auto">全天</span>
           </div>
         </div>
 
@@ -330,7 +327,7 @@
         </div>
       </div>
 
-      <div class="px-6 py-4 bg-slate-50 dark:bg-slate-900/50 flex justify-end border-t border-slate-100 dark:border-slate-800 mt-2">
+      <div class="px-6 py-4 bg-slate-50 dark:bg-slate-800/80 flex justify-end border-t border-slate-100 dark:border-slate-700 mt-2">
         <button onclick="deleteSelectedEvent()" class="flex items-center gap-1.5 px-4 py-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg text-xs font-bold transition-colors">
           <i data-lucide="trash-2" class="w-4 h-4"></i> 刪除紀錄
         </button>
@@ -339,23 +336,23 @@
   </div>
 
   <div id="category-modal" class="fixed inset-0 bg-slate-900/20 dark:bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 opacity-0 pointer-events-none transition-opacity duration-200">
-    <div class="modal-content bg-white dark:bg-[#0f0f11] border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col max-h-[90vh] scale-95 transition-transform duration-200">
-      <div class="px-5 py-4 flex justify-between items-center border-b border-slate-100 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-900/50">
+    <div class="modal-content bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col max-h-[90vh] scale-95 transition-transform duration-200">
+      <div class="px-5 py-4 flex justify-between items-center border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
         <h3 class="text-base font-bold flex items-center gap-2 text-slate-800 dark:text-white">
           <i data-lucide="settings" class="w-4 h-4 text-slate-500"></i> 標籤管理
         </h3>
-        <button onclick="closeModal('category-modal')" class="text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 p-1.5 rounded-md transition-colors">
+        <button onclick="closeModal('category-modal')" class="text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 p-1.5 rounded-md transition-colors">
           <i data-lucide="x" class="w-4 h-4"></i>
         </button>
       </div>
       
       <div class="p-6 overflow-y-auto flex-1 custom-scrollbar">
-        <form id="cat-form" class="bg-slate-50 dark:bg-slate-900/40 p-5 rounded-xl border border-slate-200 dark:border-slate-800 mb-8">
+        <form id="cat-form" class="bg-slate-50 dark:bg-slate-900/40 p-5 rounded-xl border border-slate-200 dark:border-slate-700 mb-8">
           <h4 class="font-bold text-xs text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-1.5"><i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> 新增分類</h4>
           <div class="space-y-4">
             <div>
               <label class="block text-[11px] font-bold text-slate-500 mb-1">標籤名稱</label>
-              <input required type="text" id="new-cat-name" placeholder="例如: 外部會議" class="w-full px-3 py-2 bg-white dark:bg-[#09090b] border border-slate-300 dark:border-slate-700 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/50">
+              <input required type="text" id="new-cat-name" placeholder="例如: 外部會議" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/50">
             </div>
             
             <div>
@@ -398,12 +395,12 @@
     const globalAppId = 'daily-23c82-app';
 
     const THEME_COLORS = {
-      blue: { id: 'blue', label: '藍色', allDay: 'bg-blue-500 text-white border border-blue-600', timeEvent: 'bg-blue-50 dark:bg-blue-500/10 border-l-[3px] border-blue-500 text-blue-700 dark:text-blue-300' },
-      green: { id: 'green', label: '綠色', allDay: 'bg-green-500 text-white border border-green-600', timeEvent: 'bg-green-50 dark:bg-green-500/10 border-l-[3px] border-green-500 text-green-700 dark:text-green-300' },
-      red: { id: 'red', label: '紅色', allDay: 'bg-red-500 text-white border border-red-600', timeEvent: 'bg-red-50 dark:bg-red-500/10 border-l-[3px] border-red-500 text-red-700 dark:text-red-300' },
-      yellow: { id: 'yellow', label: '黃色', allDay: 'bg-yellow-500 text-white border border-yellow-600', timeEvent: 'bg-amber-50 dark:bg-yellow-500/10 border-l-[3px] border-yellow-500 text-amber-700 dark:text-yellow-300' },
-      purple: { id: 'purple', label: '紫色', allDay: 'bg-purple-500 text-white border border-purple-600', timeEvent: 'bg-purple-50 dark:bg-purple-500/10 border-l-[3px] border-purple-500 text-purple-700 dark:text-purple-300' },
-      gray: { id: 'gray', label: '灰色', allDay: 'bg-slate-600 text-white border border-slate-700', timeEvent: 'bg-slate-100 dark:bg-slate-800 border-l-[3px] border-slate-500 text-slate-700 dark:text-slate-300' }
+      blue: { id: 'blue', label: '藍色', allDay: 'bg-blue-500 text-white border border-blue-600', timeEvent: 'bg-blue-50 dark:bg-blue-500/20 border-l-[3px] border-blue-500 text-blue-700 dark:text-blue-300' },
+      green: { id: 'green', label: '綠色', allDay: 'bg-green-500 text-white border border-green-600', timeEvent: 'bg-green-50 dark:bg-green-500/20 border-l-[3px] border-green-500 text-green-700 dark:text-green-300' },
+      red: { id: 'red', label: '紅色', allDay: 'bg-red-500 text-white border border-red-600', timeEvent: 'bg-red-50 dark:bg-red-500/20 border-l-[3px] border-red-500 text-red-700 dark:text-red-300' },
+      yellow: { id: 'yellow', label: '黃色', allDay: 'bg-yellow-500 text-white border border-yellow-600', timeEvent: 'bg-amber-50 dark:bg-yellow-500/20 border-l-[3px] border-yellow-500 text-amber-700 dark:text-yellow-300' },
+      purple: { id: 'purple', label: '紫色', allDay: 'bg-purple-500 text-white border border-purple-600', timeEvent: 'bg-purple-50 dark:bg-purple-500/20 border-l-[3px] border-purple-500 text-purple-700 dark:text-purple-300' },
+      gray: { id: 'gray', label: '灰色', allDay: 'bg-slate-600 text-white border border-slate-700', timeEvent: 'bg-slate-100 dark:bg-slate-700 border-l-[3px] border-slate-500 text-slate-700 dark:text-slate-300' }
     };
 
     window.state = {
@@ -459,7 +456,7 @@
       const container = document.getElementById('toast-container');
       const toast = document.createElement('div');
       
-      const bgColor = type === 'success' ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900' : 'bg-red-600 text-white';
+      const bgColor = type === 'success' ? 'bg-slate-800 text-white' : 'bg-red-600 text-white';
       const iconName = type === 'success' ? 'check-circle-2' : 'alert-circle';
       
       toast.className = `flex items-center gap-2.5 px-4 py-3 rounded-lg shadow-xl font-bold text-sm transform translate-y-8 opacity-0 transition-all duration-300 ease-out pointer-events-auto ${bgColor}`;
@@ -562,7 +559,7 @@
       
       document.querySelectorAll('.tp-hr, .tp-min').forEach(btn => {
         btn.classList.remove('bg-blue-500', 'text-white', 'border-blue-600', 'shadow-md');
-        btn.classList.add('bg-slate-50', 'dark:bg-slate-800/50', 'text-slate-700', 'dark:text-slate-300');
+        btn.classList.add('bg-slate-50', 'dark:bg-slate-900/50', 'text-slate-700', 'dark:text-slate-300');
       });
       
       const hrBtn = document.querySelector(`.tp-hr-${h}`);
@@ -570,11 +567,11 @@
       
       if(hrBtn) {
         hrBtn.classList.add('bg-blue-500', 'text-white', 'border-blue-600', 'shadow-md');
-        hrBtn.classList.remove('bg-slate-50', 'dark:bg-slate-800/50', 'text-slate-700', 'dark:text-slate-300');
+        hrBtn.classList.remove('bg-slate-50', 'dark:bg-slate-900/50', 'text-slate-700', 'dark:text-slate-300');
       }
       if(minBtn) {
         minBtn.classList.add('bg-blue-500', 'text-white', 'border-blue-600', 'shadow-md');
-        minBtn.classList.remove('bg-slate-50', 'dark:bg-slate-800/50', 'text-slate-700', 'dark:text-slate-300');
+        minBtn.classList.remove('bg-slate-50', 'dark:bg-slate-900/50', 'text-slate-700', 'dark:text-slate-300');
       }
     };
 
@@ -596,7 +593,7 @@
         knob.className = 'absolute top-[2px] left-[2px] bg-white w-4 h-4 rounded-full transition-transform translate-x-4 shadow-sm';
         times.classList.add('hidden');
       } else {
-        bg.className = 'w-9 h-5 rounded-full transition-colors relative bg-slate-300 dark:bg-slate-700';
+        bg.className = 'w-9 h-5 rounded-full transition-colors relative bg-slate-300 dark:bg-slate-600';
         knob.className = 'absolute top-[2px] left-[2px] bg-white dark:bg-slate-300 w-4 h-4 rounded-full transition-transform translate-x-0 shadow-sm';
         times.classList.remove('hidden');
       }
@@ -616,7 +613,7 @@
         bg.className = 'w-9 h-5 rounded-full transition-colors relative bg-green-500';
         knob.className = 'absolute top-[2px] left-[2px] bg-white w-4 h-4 rounded-full transition-transform translate-x-4 shadow-sm';
       } else {
-        bg.className = 'w-9 h-5 rounded-full transition-colors relative bg-slate-300 dark:bg-slate-700';
+        bg.className = 'w-9 h-5 rounded-full transition-colors relative bg-slate-300 dark:bg-slate-600';
         knob.className = 'absolute top-[2px] left-[2px] bg-white dark:bg-slate-300 w-4 h-4 rounded-full transition-transform translate-x-0 shadow-sm';
       }
     };
@@ -797,7 +794,6 @@
         const isRedDay = isWeekend || holidayName;
         const isToday = dateStr === window.state.todayStr;
 
-        // ★★★ 核心改動區域：支援「每日重複」的渲染邏輯 ★★★
         const dayEvents = filteredEvents.filter(e => {
           const startStr = e.dateString;
           const endStr = e.endDateString || e.dateString;
@@ -811,11 +807,9 @@
 
           if (!e.isAllDay) {
               if (e.isDailyRepeat) {
-                  // 情境A：每日重複 (如值日生)，每天都只顯示獨立的開始時間
                   displayIsAllDay = false;
                   displayTimeStr = e.startTime;
               } else if (isMultiDay) {
-                  // 情境B：連續事件 (如請假)，頭尾顯示時間，中間變全天
                   if (dateStr === e.dateString) {
                       if (e.startTime === '08:00' || e.startTime === '09:00') {
                           displayIsAllDay = true;
@@ -832,7 +826,6 @@
                       displayIsAllDay = true;
                   }
               } else {
-                  // 單日事件
                   displayTimeStr = e.startTime;
               }
           }
@@ -845,15 +838,15 @@
         let bgClass = 'bg-transparent';
         let textClass = 'text-slate-900 dark:text-slate-100';
         if (!dayObj.isCurrent) {
-          bgClass = 'bg-slate-50/50 dark:bg-[#111113]';
-          textClass = 'text-slate-400 dark:text-slate-600';
+          bgClass = 'bg-slate-50/50 dark:bg-slate-900/40';
+          textClass = 'text-slate-400 dark:text-slate-500';
         } else if (isRedDay) {
           bgClass = 'bg-red-50/40 dark:bg-red-950/20';
           textClass = 'text-red-600 dark:text-red-400';
         }
 
         const cell = document.createElement('div');
-        cell.className = `min-h-[140px] border-r border-b border-slate-200 dark:border-slate-800 p-1.5 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors flex flex-col ${bgClass}`;
+        cell.className = `min-h-[140px] border-r border-b border-slate-200 dark:border-slate-700 p-1.5 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors flex flex-col ${bgClass}`;
         cell.onclick = () => openAddModal(dayObj.date);
 
         let eventsHtml = dayEvents.map(item => {
@@ -905,7 +898,6 @@
       document.getElementById('form-is-allday').value = 'true';
       updateAllDayUI(true);
 
-      // 預設關閉每日重複
       document.getElementById('form-is-daily').value = 'false';
       updateDailyUI(false);
 
@@ -946,7 +938,6 @@
       } else {
         document.getElementById('view-time-container').classList.remove('hidden');
         document.getElementById('view-time').textContent = `${evt.startTime} - ${evt.endTime}`;
-        // 區分顯示特定時間或每日重複
         document.getElementById('view-type').textContent = evt.isDailyRepeat ? '每日固定時段' : '特定時間';
       }
 
@@ -984,7 +975,6 @@
         document.getElementById('form-end-time').value = evt.endTime;
       }
 
-      // 讀取每日重複狀態
       document.getElementById('form-is-daily').value = evt.isDailyRepeat ? 'true' : 'false';
       updateDailyUI(evt.isDailyRepeat || false);
 
@@ -1021,7 +1011,7 @@
         categoryId: document.getElementById('form-category').value,
         description: document.getElementById('form-desc').value.trim(),
         isAllDay: isAllDay,
-        isDailyRepeat: isDailyRepeat, // 儲存每日重複狀態
+        isDailyRepeat: isDailyRepeat,
         startTime: isAllDay ? null : document.getElementById('form-start-time').value,
         endTime: isAllDay ? null : document.getElementById('form-end-time').value,
         updatedAt: new Date().toISOString()
