@@ -5,10 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>部門共用行事曆</title>
   
-  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   
-  <!-- Tailwind Configuration for Dark Mode & Custom Colors -->
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -18,15 +16,13 @@
     }
   </script>
 
-  <!-- Lucide Icons CDN -->
   <script src="https://unpkg.com/lucide@latest"></script>
 
-  <!-- Flatpickr CDN (僅供日期使用) -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  
   <link rel="stylesheet" type="text/css" href="https://npmcdn.com/flatpickr/dist/themes/dark.css" id="flatpickr-dark-theme" disabled>
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
-  <!-- Custom Styles -->
   <style>
     .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
     .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
@@ -40,7 +36,6 @@
 </head>
 <body class="bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-sans transition-colors duration-200 min-h-screen pb-20">
 
-  <!-- Header -->
   <header class="border-b border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-4 md:px-6 py-3 flex flex-col md:flex-row justify-between items-center gap-4 sticky top-0 z-20">
     <div class="flex items-center gap-3">
       <div class="p-1.5 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 rounded-md shadow-sm">
@@ -73,10 +68,8 @@
     </div>
   </header>
 
-  <!-- Main Workspace -->
   <main class="max-w-[1600px] mx-auto p-4 md:p-6">
     
-    <!-- Controls -->
     <div class="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-4">
       <div class="flex items-center gap-4">
         <div class="relative">
@@ -120,9 +113,8 @@
       </div>
     </div>
 
-    <!-- Calendar Grid (卡片化層次) -->
     <div class="border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-xl shadow-sm overflow-hidden">
-      <div class="grid grid-cols-7 border-b border-slate-200 dark:border-slate-700 bg-slate-50/90 dark:bg-slate-800/90 backdrop-blur-sm sticky top-[60px] z-10">
+      <div class="grid grid-cols-7 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
         <div class="py-2.5 text-center text-xs font-bold border-r border-slate-200 dark:border-slate-700 tracking-widest text-red-500/80 dark:text-red-400/80">週日</div>
         <div class="py-2.5 text-center text-xs font-bold border-r border-slate-200 dark:border-slate-700 tracking-widest text-slate-500">週一</div>
         <div class="py-2.5 text-center text-xs font-bold border-r border-slate-200 dark:border-slate-700 tracking-widest text-slate-500">週二</div>
@@ -143,9 +135,6 @@
     </p>
   </div>
 
-  <!-- --- Modals --- -->
-  
-  <!-- Add/Edit Event Modal -->
   <div id="event-modal" class="fixed inset-0 bg-slate-900/20 dark:bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 opacity-0 pointer-events-none transition-opacity duration-200">
     <div class="modal-content bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden scale-95 transition-transform duration-200">
       <div class="px-5 py-4 flex justify-between items-center border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
@@ -374,12 +363,11 @@
   </div>
 
 
-  <!-- --- Firebase & Application Logic --- -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
     import { getFirestore, collection, onSnapshot, doc, deleteDoc, addDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
+    
     const firebaseConfig = {
       apiKey: "AIzaSyAXnSDK_kY4Aa8XvL0M_Md9kA4Wdow_Uvs",
       authDomain: "daily-23c82.firebaseapp.com",
@@ -388,12 +376,12 @@
       messagingSenderId: "574719251457",
       appId: "1:574719251457:web:30aadb364406783b175c00"
     };
-
+    
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
     const globalAppId = 'daily-23c82-app';
-
+    
     const THEME_COLORS = {
       blue: { id: 'blue', label: '藍色', allDay: 'bg-blue-500 text-white border border-blue-600', timeEvent: 'bg-blue-50 dark:bg-blue-500/20 border-l-[3px] border-blue-500 text-blue-700 dark:text-blue-300' },
       green: { id: 'green', label: '綠色', allDay: 'bg-green-500 text-white border border-green-600', timeEvent: 'bg-green-50 dark:bg-green-500/20 border-l-[3px] border-green-500 text-green-700 dark:text-green-300' },
@@ -402,7 +390,7 @@
       purple: { id: 'purple', label: '紫色', allDay: 'bg-purple-500 text-white border border-purple-600', timeEvent: 'bg-purple-50 dark:bg-purple-500/20 border-l-[3px] border-purple-500 text-purple-700 dark:text-purple-300' },
       gray: { id: 'gray', label: '灰色', allDay: 'bg-slate-600 text-white border border-slate-700', timeEvent: 'bg-slate-100 dark:bg-slate-700 border-l-[3px] border-slate-500 text-slate-700 dark:text-slate-300' }
     };
-
+    
     window.state = {
       isDark: false,
       user: null,
@@ -418,7 +406,7 @@
       unsubEvents: null,
       unsubCats: null
     };
-
+    
     const formatToYYYYMMDD = (date) => {
       const yyyy = date.getFullYear();
       const mm = String(date.getMonth() + 1).padStart(2, '0');
@@ -427,12 +415,12 @@
     };
     
     window.state.todayStr = formatToYYYYMMDD(new Date());
-
+    
     const parseYYYYMMDD_to_Dash = (ds) => {
       if (!ds) return '';
       return `${ds.substring(0,4)}-${ds.substring(4,6)}-${ds.substring(6,8)}`;
     };
-
+    
     const escapeHTML = (str) => {
       return (str||'').replace(/[&<>'"]/g, tag => ({
           '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
@@ -444,21 +432,20 @@
       const urlRegex = /(https?:\/\/[^\s]+)/g;
       return safeText.replace(urlRegex, '<a href="$1" target="_blank" class="text-blue-500 dark:text-blue-400 hover:underline underline-offset-2 break-all">$1</a>');
     };
-
+    
     const getCategoryTheme = (categoryId) => {
       const cat = window.state.categories.find(c => c.id === categoryId);
       if (!cat) return THEME_COLORS.gray;
       if (cat.themeId && THEME_COLORS[cat.themeId]) return THEME_COLORS[cat.themeId];
       return THEME_COLORS.gray;
     };
-
+    
     window.showToast = (message, type = 'success') => {
       const container = document.getElementById('toast-container');
       const toast = document.createElement('div');
       
       const bgColor = type === 'success' ? 'bg-slate-800 text-white' : 'bg-red-600 text-white';
       const iconName = type === 'success' ? 'check-circle-2' : 'alert-circle';
-      
       toast.className = `flex items-center gap-2.5 px-4 py-3 rounded-lg shadow-xl font-bold text-sm transform translate-y-8 opacity-0 transition-all duration-300 ease-out pointer-events-auto ${bgColor}`;
       toast.innerHTML = `<i data-lucide="${iconName}" class="w-4 h-4"></i> <span>${message}</span>`;
       
@@ -468,7 +455,6 @@
       requestAnimationFrame(() => {
         toast.classList.remove('translate-y-8', 'opacity-0');
       });
-      
       setTimeout(() => {
         toast.classList.add('translate-y-4', 'opacity-0');
         setTimeout(() => toast.remove(), 300);
@@ -485,7 +471,7 @@
       if (id === 'category-modal') renderCategoryThemeSelector();
       lucide.createIcons();
     };
-
+    
     window.closeModal = (id) => {
       const modal = document.getElementById(id);
       const content = modal.querySelector('.modal-content');
@@ -523,7 +509,7 @@
         dropdown.classList.add('hidden');
       }
     });
-
+    
     window.currentTimeTarget = null;
     
     window.openCustomTimePicker = (inputId) => {
@@ -545,7 +531,7 @@
       document.getElementById(window.currentTimeTarget).value = newTime;
       updateTimePickerUI(h, m);
     };
-
+    
     window.selectTimePickerMin = (m) => {
       const currentVal = document.getElementById(window.currentTimeTarget).value || '09:00';
       const [h, _] = currentVal.split(':').map(Number);
@@ -553,15 +539,13 @@
       document.getElementById(window.currentTimeTarget).value = newTime;
       updateTimePickerUI(h, m);
     };
-
+    
     const updateTimePickerUI = (h, m) => {
       document.getElementById('time-picker-display').textContent = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-      
       document.querySelectorAll('.tp-hr, .tp-min').forEach(btn => {
         btn.classList.remove('bg-blue-500', 'text-white', 'border-blue-600', 'shadow-md');
         btn.classList.add('bg-slate-50', 'dark:bg-slate-900/50', 'text-slate-700', 'dark:text-slate-300');
       });
-      
       const hrBtn = document.querySelector(`.tp-hr-${h}`);
       const minBtn = document.querySelector(`.tp-min-${m}`);
       
@@ -575,14 +559,13 @@
       }
     };
 
-    // --- ★ 全天與每日重複切換邏輯 ★ ---
     window.toggleAllDay = () => {
       const input = document.getElementById('form-is-allday');
       const isAllDay = input.value === 'true';
       input.value = (!isAllDay).toString();
       updateAllDayUI(!isAllDay);
     };
-
+    
     const updateAllDayUI = (isAllDay) => {
       const bg = document.getElementById('allday-toggle-bg');
       const knob = document.getElementById('allday-toggle-knob');
@@ -598,7 +581,7 @@
         times.classList.remove('hidden');
       }
     };
-
+    
     window.toggleDailyRepeat = () => {
       const input = document.getElementById('form-is-daily');
       const isDaily = input.value === 'true';
@@ -617,19 +600,22 @@
         knob.className = 'absolute top-[2px] left-[2px] bg-white dark:bg-slate-300 w-4 h-4 rounded-full transition-transform translate-x-0 shadow-sm';
       }
     };
-
+    
     window.prevMonth = () => {
       window.state.currentDate = new Date(window.state.currentDate.getFullYear(), window.state.currentDate.getMonth() - 1, 1);
       renderCalendar();
     };
+    
     window.nextMonth = () => {
       window.state.currentDate = new Date(window.state.currentDate.getFullYear(), window.state.currentDate.getMonth() + 1, 1);
       renderCalendar();
     };
+    
     window.goToToday = () => {
       window.state.currentDate = new Date();
       renderCalendar();
     };
+    
     window.changeYearMonth = () => {
       const y = document.getElementById('year-select').value;
       const m = document.getElementById('month-select').value;
@@ -642,18 +628,16 @@
       const currentY = window.state.currentDate.getFullYear();
       const currentM = window.state.currentDate.getMonth() + 1;
       const prefix = `${currentY}${String(currentM).padStart(2, '0')}`;
-      
       const monthEvents = window.state.events.filter(e => {
         const start = e.dateString;
         const end = e.endDateString || e.dateString;
         return (start.startsWith(prefix) || (end >= prefix+'01' && start <= prefix+'31'));
       });
-
+      
       if (monthEvents.length === 0) return showToast('本月份沒有資料可以匯出', 'error');
 
       let csvContent = "\uFEFF"; 
       csvContent += "開始日期,結束日期,事項模式,開始時間,結束時間,分類,負責人,標題,詳細說明\n";
-      
       monthEvents.forEach(e => {
         const cat = window.state.categories.find(c => c.id === e.categoryId);
         const catName = cat ? cat.name : '未分類';
@@ -695,7 +679,7 @@
       window.state.filterCategory = e.target.value;
       renderCalendar();
     });
-
+    
     const fetchHolidays = async () => {
       const year = window.state.currentDate.getFullYear();
       try {
@@ -707,12 +691,11 @@
         }
       } catch (error) { console.error(error); }
     };
-
+    
     const setupFirebaseListeners = () => {
       if (!window.state.user) return;
       if (window.state.unsubEvents) window.state.unsubEvents();
       if (window.state.unsubCats) window.state.unsubCats();
-
       const deptKey = window.state.department.toLowerCase();
       const eventsRef = collection(db, 'artifacts', globalAppId, 'public', 'data', `events_${deptKey}`);
       const categoriesRef = collection(db, 'artifacts', globalAppId, 'public', 'data', `categories_${deptKey}`);
@@ -722,7 +705,7 @@
         snapshot.forEach(doc => window.state.events.push({ id: doc.id, ...doc.data() }));
         renderCalendar();
       });
-
+      
       window.state.unsubCats = onSnapshot(categoriesRef, (snapshot) => {
         window.state.categories = [];
         snapshot.forEach(doc => window.state.categories.push({ id: doc.id, ...doc.data() }));
@@ -735,7 +718,7 @@
         renderCalendar();
       });
     };
-
+    
     document.getElementById('dept-form').addEventListener('submit', (e) => {
       e.preventDefault();
       const val = document.getElementById('dept-input').value.trim();
@@ -748,11 +731,10 @@
         document.getElementById('dept-input').value = '';
       }
     });
-
+    
     const renderCalendar = () => {
       const grid = document.getElementById('calendar-grid');
       grid.innerHTML = '';
-      
       const year = window.state.currentDate.getFullYear();
       const month = window.state.currentDate.getMonth();
       document.getElementById('current-month-year').textContent = `${year} 年 ${month + 1} 月`;
@@ -765,7 +747,6 @@
       document.getElementById('month-select').value = month;
 
       if (!window.state.holidays[`${year}0101`]) fetchHolidays();
-
       const daysInMonth = new Date(year, month + 1, 0).getDate();
       const firstDay = new Date(year, month, 1).getDay();
       
@@ -774,7 +755,7 @@
       for (let i = 1; i <= daysInMonth; i++) days.push({ date: new Date(year, month, i), isCurrent: true });
       const remainingDays = 42 - days.length; 
       for (let i = 1; i <= remainingDays; i++) days.push({ date: new Date(year, month + 1, i), isCurrent: false });
-
+      
       const q = window.state.searchQuery;
       const f = window.state.filterCategory;
       const filteredEvents = window.state.events.filter(e => {
@@ -786,7 +767,7 @@
          }
          return true;
       });
-
+      
       days.forEach(dayObj => {
         const dateStr = formatToYYYYMMDD(dayObj.date);
         const isWeekend = dayObj.date.getDay() === 0 || dayObj.date.getDay() === 6;
@@ -834,7 +815,7 @@
           if (a.displayIsAllDay !== b.displayIsAllDay) return a.displayIsAllDay ? -1 : 1;
           return (a.original.startTime || '').localeCompare(b.original.startTime || '');
         });
-
+        
         let bgClass = 'bg-transparent';
         let textClass = 'text-slate-900 dark:text-slate-100';
         if (!dayObj.isCurrent) {
@@ -848,7 +829,7 @@
         const cell = document.createElement('div');
         cell.className = `min-h-[140px] border-r border-b border-slate-200 dark:border-slate-700 p-1.5 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors flex flex-col ${bgClass}`;
         cell.onclick = () => openAddModal(dayObj.date);
-
+        
         let eventsHtml = dayEvents.map(item => {
           const evt = item.original;
           const theme = getCategoryTheme(evt.categoryId);
@@ -870,7 +851,8 @@
         cell.innerHTML = `
           <div class="flex flex-col items-center mb-1.5">
             <div class="w-7 h-7 flex items-center justify-center rounded-full text-[13px] font-bold ${isToday ? 'bg-blue-600 text-white shadow-md' : textClass}">${dayObj.date.getDate()}</div>
-            ${holidayName && dayObj.isCurrent ? `<span class="text-[10px] font-bold text-red-500 dark:text-red-400 truncate max-w-full px-1 mt-0.5">${holidayName}</span>` : ''}
+            ${holidayName && dayObj.isCurrent ?
+            `<span class="text-[10px] font-bold text-red-500 dark:text-red-400 truncate max-w-full px-1 mt-0.5">${holidayName}</span>` : ''}
           </div>
           <div class="flex-1 overflow-y-auto space-y-[4px] mt-0.5 pr-0.5 custom-scrollbar">${eventsHtml}</div>
         `;
@@ -881,7 +863,6 @@
 
     window.openAddModal = (dateObj) => {
       const yyyy_mm_dd = `${dateObj.getFullYear()}-${String(dateObj.getMonth()+1).padStart(2,'0')}-${String(dateObj.getDate()).padStart(2,'0')}`;
-      
       document.getElementById('form-id').value = '';
       
       document.getElementById('form-start-date')._flatpickr.setDate(yyyy_mm_dd);
@@ -917,13 +898,10 @@
       const decodedJson = parser.parseFromString(eventJsonStr, "text/html").documentElement.textContent;
       const evt = JSON.parse(decodedJson);
       window.state.selectedEvent = evt;
-      
       const theme = getCategoryTheme(evt.categoryId);
       const cat = window.state.categories.find(c => c.id === evt.categoryId);
-      
       document.getElementById('view-badge').className = `px-2.5 py-1 rounded-[4px] text-[10px] font-bold tracking-widest uppercase shadow-sm ${theme.allDay}`;
       document.getElementById('view-badge').textContent = cat ? cat.name : '未分類';
-      
       document.getElementById('view-title').textContent = evt.title;
       
       const sDate = parseYYYYMMDD_to_Dash(evt.dateString).replace(/-/g, '/');
@@ -931,7 +909,6 @@
       document.getElementById('view-date').textContent = sDate === eDate ? sDate : `${sDate} - ${eDate}`;
       
       document.getElementById('view-name').textContent = evt.name;
-      
       if (evt.isAllDay) {
         document.getElementById('view-time-container').classList.add('hidden');
         document.getElementById('view-type').textContent = '全天';
@@ -953,7 +930,6 @@
 
     window.startEditMode = () => {
       const evt = window.state.selectedEvent;
-      
       document.getElementById('form-id').value = evt.id;
       
       const startD = parseYYYYMMDD_to_Dash(evt.dateString);
@@ -977,14 +953,13 @@
 
       document.getElementById('form-is-daily').value = evt.isDailyRepeat ? 'true' : 'false';
       updateDailyUI(evt.isDailyRepeat || false);
-
       document.getElementById('event-modal-title').innerHTML = '<i data-lucide="edit-2" class="w-4 h-4 text-blue-500"></i> 編輯事項';
       document.getElementById('form-submit-btn').textContent = '儲存變更';
 
       closeModal('view-modal');
       setTimeout(() => openModal('event-modal'), 200); 
     };
-
+    
     document.getElementById('event-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       if (!window.state.user) return;
@@ -1016,7 +991,7 @@
         endTime: isAllDay ? null : document.getElementById('form-end-time').value,
         updatedAt: new Date().toISOString()
       };
-
+      
       const deptKey = window.state.department.toLowerCase();
       
       if (id) {
@@ -1029,7 +1004,7 @@
       }
       closeModal('event-modal');
     });
-
+    
     window.deleteSelectedEvent = async () => {
       if (!window.state.user || !window.state.selectedEvent) return;
       const deptKey = window.state.department.toLowerCase();
@@ -1037,7 +1012,7 @@
       closeModal('view-modal');
       showToast('紀錄已永久刪除');
     };
-
+    
     const updateCategoryOptions = () => {
       const select = document.getElementById('form-category');
       const filterSelect = document.getElementById('filter-category');
@@ -1057,7 +1032,6 @@
     const renderCategoryThemeSelector = () => {
       const container = document.getElementById('theme-selector');
       const activeId = document.getElementById('new-cat-theme').value;
-      
       container.innerHTML = Object.values(THEME_COLORS).map(theme => {
         const isActive = activeId === theme.id;
         const ringClass = isActive ? 'ring-2 ring-offset-1 ring-slate-900 dark:ring-slate-100 ring-offset-slate-50 dark:ring-offset-slate-900 shadow-md' : 'opacity-50 hover:opacity-100';
@@ -1078,7 +1052,7 @@
       }).join('');
       lucide.createIcons();
     };
-
+    
     document.getElementById('cat-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       if (!window.state.user) return;
@@ -1100,15 +1074,13 @@
       await deleteDoc(doc(db, 'artifacts', globalAppId, 'public', 'data', `categories_${deptKey}`, id));
       showToast('標籤已刪除');
     };
-
+    
     const initApp = async () => {
       document.getElementById('display-department').textContent = window.state.department;
-      
       const endDatePicker = flatpickr("#form-end-date", {
           dateFormat: "Y-m-d",
           disableMobile: "true"
       });
-
       flatpickr("#form-start-date", {
           dateFormat: "Y-m-d",
           disableMobile: "true",
@@ -1119,7 +1091,6 @@
               }
           }
       });
-      
       const yearSelect = document.getElementById('year-select');
       const monthSelect = document.getElementById('month-select');
       const baseYear = new Date().getFullYear();
@@ -1127,7 +1098,6 @@
       for(let i=0; i<12; i++) monthSelect.innerHTML += `<option value="${i}">${i + 1} 月</option>`;
 
       lucide.createIcons();
-      
       onAuthStateChanged(auth, (user) => {
         if (user) {
           window.state.user = user;
